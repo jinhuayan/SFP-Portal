@@ -1,0 +1,260 @@
+import { useState, useContext } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '@/contexts/authContext';
+import { toast } from 'sonner';
+
+// Mock user roles for demonstration
+const mockUsers = [
+  {
+    id: '1',
+    email: 'adopter@example.com',
+    password: 'password123',
+    name: 'Adopter User',
+    role: ['Adopter']
+  },
+  {
+    id: '2',
+    email: 'foster@example.com',
+    password: 'password123',
+    name: 'Foster User',
+    role: ['Foster']
+  },
+  {
+    id: '3',
+    email: 'superfoster@example.com',
+    password: 'password123',
+    name: 'Super Foster User',
+    role: ['Foster', 'Super Foster']
+  },
+  {
+    id: '4',
+    email: 'interviewer@example.com',
+    password: 'password123',
+    name: 'Interviewer User',
+    role: ['Interviewer']
+  },
+  {
+    id: '5',
+    email: 'admin@example.com',
+    password: 'password123',
+    name: 'Admin User',
+    role: ['Admin']
+  }
+];
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('Please enter both email and password');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      const user = mockUsers.find(u => u.email === email && u.password === password);
+      
+      if (user) {
+        login(user);
+        toast.success(`Welcome back, ${user.name}!`);
+        
+        // Redirect based on user role
+        if (user.role.includes('Admin')) {
+          navigate('/dashboard');
+        } else if (user.role.includes('Interviewer')) {
+          navigate('/applications/manage');
+        } else if (user.role.includes('Foster') || user.role.includes('Super Foster')) {
+          navigate('/animals/manage');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        toast.error('Invalid email or password');
+      }
+      
+      setIsSubmitting(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#FFDF4] dark:bg-gray-900">
+      <div className="max-w-md w-full space-y-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <img 
+            src="https://lf-code-agent.coze.cn/obj/x-ai-cn/298572746754/attachment/logo_20251115040913.png" 
+            alt="Save Fur Pets" 
+            className="mx-auto h-20 w-auto"
+          />
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
+            Sign in to your account
+          </h2>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Or <a href="#" className="font-medium text-[#4C51A4] hover:text-[#383C80]">create a new account</a>
+          </p>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mt-8 space-y-6"
+        >
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <input type="hidden" name="remember" defaultValue="true" />
+            <div className="rounded-md -space-y-px">
+              <div>
+                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Email address
+                </label>
+                <input
+                  id="email-address"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-[#4C51A4] focus:border-[#4C51A4] focus:z-10 text-sm"
+                  placeholder="Email address"
+                />
+              </div>
+              <div className="mt-4">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-[#4C51A4] focus:border-[#4C51A4] focus:z-10 text-sm"
+                  placeholder="Password"
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-[#4C51A4] focus:ring-[#4C51A4] border-gray-300 dark:border-gray-700 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                  Remember me
+                </label>
+              </div>
+              
+              <div className="text-sm">
+                <a href="#" className="font-medium text-[#4C51A4] hover:text-[#383C80]">
+                  Forgot your password?
+                </a>
+              </div>
+            </div>
+            
+            <div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`group relative w-full flex justify-center py-2 px-4 border border-transparent rounded-lg text-white font-medium bg-[#4C51A4] hover:bg-[#383C80] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4C51A4] transition-all ${
+                  isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center">
+                    <i className="fa-solid fa-spinner fa-spin mr-2"></i>
+                    Signing in...
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <i className="fa-solid fa-sign-in mr-2"></i>
+                    Sign in
+                  </div>
+                )}
+              </button>
+            </div>
+          </form>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-[#FFDF4] dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                Or sign in with
+              </span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              type="button"
+              className="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4C51A4]"
+            >
+              <i className="fa-brands fa-google mr-2"></i>
+              <span>Google</span>
+            </button>
+            
+            <button
+              type="button"
+              className="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4C51A4]"
+            >
+              <i className="fa-brands fa-facebook-f mr-2"></i>
+              <span>Facebook</span>
+            </button>
+            
+            <button
+              type="button"
+              className="inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4C51A4]"
+            >
+              <i className="fa-brands fa-twitter mr-2"></i>
+              <span>Twitter</span>
+            </button>
+          </div>
+        </motion.div>
+        
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Don't have an account?{' '}
+            <a href="#" className="font-medium text-[#4C51A4] hover:text-[#383C80]">
+              Sign up now
+            </a>
+          </p>
+        </div>
+        
+        {/* Mock login credentials info */}
+        <div className="mt-8 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Mock Login Credentials:
+          </h3>
+          <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-2">
+           <li><strong>Adopter:</strong> adopter@example.com / password123</li>
+           <li><strong>Volunteer (Foster):</strong> foster@example.com / password123</li>
+           <li><strong>Volunteer (Super Foster):</strong> superfoster@example.com / password123</li>
+           <li><strong>Volunteer (Interviewer):</strong> interviewer@example.com / password123</li>
+           <li><strong>Admin:</strong> admin@example.com / password123</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}

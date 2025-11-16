@@ -1,3 +1,130 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Tailwind配置不需要在这里重复定义，只需要添加自定义工具类 */
+
+/* 自定义工具类 */
+@layer utilities {
+  /* 主题颜色工具类 */
+  .bg-primary {
+    background-color: #4C51A4; /* 力量高雅紫 */
+  }
+  
+  .bg-primary-dark {
+    background-color: #383C80; /* 深紫色 */
+  }
+  
+  .text-primary {
+    color: #4C51A4; /* 力量高雅紫 */
+  }
+  
+  .border-primary {
+    border-color: #4C51A4; /* 力量高雅紫 */
+  }
+  
+  .focus-ring-primary {
+    @apply focus:ring-2 focus:ring-[#4C51A4] focus:border-[#4C51A4];
+  }
+  
+  /* 响应式工具类 */
+  .content-auto {
+    content-visibility: auto;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  /* 动画工具类 */
+  .fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  .pulse-soft {
+    animation: pulseSoft 3s infinite;
+  }
+}
+
+/* 自定义动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Role-based styling */
+.role-badge {
+  @apply text-xs font-semibold px-2.5 py-0.5 rounded-full;
+}
+
+.role-badge-adopter {
+  @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100;
+}
+
+.role-badge-foster {
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100;
+}
+
+.role-badge-super-foster {
+  @apply bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-100;
+}
+
+.role-badge-interviewer {
+  @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100;
+}
+
+.role-badge-admin {
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100;
+}
+
+/* Status badges */
+.status-badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.status-draft {
+  @apply bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200;
+}
+
+.status-review {
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300;
+}
+
+.status-published {
+  @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300;
+}
+
+.status-interviewing {
+  @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300;
+}
+
+.status-reserved {
+  @apply bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300;
+}
+
+.status-adopted {
+  @apply bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300;
+}
+
+.status-archived {
+  @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300;
+}
