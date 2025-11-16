@@ -2,32 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Tailwind配置不需要在这里重复定义，只需要添加自定义工具类 */
+/* No need to repeat Tailwind config here, just add custom utility classes */
 
-/* 自定义工具类 */
+/* Custom utility classes */
 @layer utilities {
-  /* 主题颜色工具类 */
+  /* Theme color utilities */
   .bg-primary {
-    background-color: #4C51A4; /* 力量高雅紫 */
+    background-color: #4C51A4; /* Elegant Power Purple */
   }
   
   .bg-primary-dark {
-    background-color: #383C80; /* 深紫色 */
+    background-color: #383C80; /* Deep Purple */
   }
   
   .text-primary {
-    color: #4C51A4; /* 力量高雅紫 */
+    color: #4C51A4; /* Elegant Power Purple */
   }
   
   .border-primary {
-    border-color: #4C51A4; /* 力量高雅紫 */
+    border-color: #4C51A4; /* Elegant Power Purple */
   }
   
   .focus-ring-primary {
     @apply focus:ring-2 focus:ring-[#4C51A4] focus:border-[#4C51A4];
   }
   
-  /* 响应式工具类 */
+  /* Responsive utilities */
   .content-auto {
     content-visibility: auto;
   }
@@ -41,7 +41,7 @@
     scrollbar-width: none;
   }
   
-  /* 动画工具类 */
+  /* Animation utilities */
   .fade-in {
     animation: fadeIn 0.5s ease-in-out;
   }
@@ -55,7 +55,7 @@
   }
 }
 
-/* 自定义动画 */
+/* Custom animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
