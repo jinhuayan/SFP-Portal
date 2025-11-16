@@ -20,6 +20,7 @@ import { useState } from "react";
 import { AuthContext } from '@/contexts/authContext';
 import { useTheme } from '@/hooks/useTheme';
 import ProtectedRoute from "@/components/common/ProtectedRoute";
+import AssignInterviewer from "./pages/AssignInterviewer";
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<{
@@ -107,7 +108,7 @@ export default function App() {
               </ProtectedRoute>
             } />
             {/* Assign Interviewers Route */}
-            <Route path="/interviewers/assign" element={
+            {/* <Route path="/interviewers/assign" element={
               <ProtectedRoute requiredRoles={['Admin']}>
                 <div className="min-h-screen py-12 bg-white dark:bg-gray-900">
                   <div className="container mx-auto px-4">
@@ -120,7 +121,12 @@ export default function App() {
                   </div>
                 </div>
               </ProtectedRoute>
-            } />
+            } /> */}
+            <Route path="/interviewers/assign" element={
+              <ProtectedRoute requiredRoles={['Admin']}>
+                <AssignInterviewer />
+              </ProtectedRoute>
+            } />  
             
               {/* Add profile editing route */}
             <Route path="/profile" element={

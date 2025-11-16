@@ -290,8 +290,8 @@ export default function Home() {
               },
               {
                 icon: 'fa-calendar-check',
-                title: 'Interview & Meet',
-                description: 'Schedule an interview and meet your potential new family member.'
+                title: 'Interview',
+                description: 'Schedule an interview for your potential new family member.'
               },
               {
                 icon: 'fa-home',
@@ -320,37 +320,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      
-       {/* Call to Action Section */}
-       <section className="py-20 bg-gradient-to-r from-primary to-primary-dark text-white">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to Find Your Perfect Match?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto text-white/90">
-              Browse our available pets today and take the first step toward adding a new member to your family.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link 
-                  to="/adoptables" 
-                  className="bg-white text-[#4C51A4] hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
-                >
-                  Find a Pet
-                </Link>
-                <Link 
-                  to="/contact" 
-                  className="bg-transparent border-2 border-white text-white hover:bg-white/10 font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                 Contact Us
-               </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+  
     </div>
     </div>
   );

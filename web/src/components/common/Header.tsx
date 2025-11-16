@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/hooks/useTheme';
 import { AuthContext } from '@/contexts/authContext';
@@ -8,14 +8,46 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { currentUser, logout } = useContext(AuthContext);
 
-  const isAdmin = currentUser?.role.includes('Admin');
-  const isFoster = currentUser?.role.includes('Foster') && !currentUser?.role.includes('Super Foster');
-  const isSuperFoster = currentUser?.role.includes('Super Foster');
-  const isInterviewer = currentUser?.role.includes('Interviewer');
-  const isAdopter = currentUser?.role.includes('Adopter') && !isAdmin && !isFoster && !isSuperFoster && !isInterviewer;
-  
+  // Type guard for currentUser
+  const isUserObject = (user: any): user is { role: string[]; name: string; isAuthenticated: boolean } => {
+    return user && typeof user === 'object' && Array.isArray(user.role) && typeof user.name === 'string';
+  };
+
+  const isAdmin = isUserObject(currentUser) && currentUser.role.includes('Admin');
+  const isFoster = isUserObject(currentUser) && currentUser.role.includes('Foster') && !currentUser.role.includes('Super Foster');
+  const isSuperFoster = isUserObject(currentUser) && currentUser.role.includes('Super Foster');
+  const isInterviewer = isUserObject(currentUser) && currentUser.role.includes('Interviewer');
+  const isAdopter = isUserObject(currentUser) && currentUser.role.includes('Adopter') && !isAdmin && !isFoster && !isSuperFoster && !isInterviewer;
+  const isAuthenticated = isUserObject(currentUser) && currentUser.isAuthenticated;
+  const userName = isUserObject(currentUser) ? currentUser.name : 'User';
+
   // Determine if user is internal staff
   const isInternalStaff = isAdmin || isFoster || isSuperFoster || isInterviewer;
+
+  // Profile dropdown state + ref to handle outside clicks / Escape
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setIsProfileOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-sm transition-all duration-300">
@@ -55,7 +87,7 @@ export default function Header() {
                   </Link>
                   {isAdmin && (
                     <Link 
-                      to="#" 
+                      to="/interviewers/assign" 
                       className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
                     >
                       Assign Interviewers
@@ -81,37 +113,35 @@ export default function Header() {
                    Manage Users
                  </Link>
                )}
-                {isAdmin && (
-                  <Link 
-                    to="/interviewers/assign" 
-                    className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
-                  >
-                    Assign Interviewers
-                  </Link>
-                )}
               
               {/* User profile and logout */}
-              <div className="relative group">
-                <button className="flex items-center text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors">
+              <div ref={profileRef} className="relative">
+                <button
+                  onClick={() => setIsProfileOpen((s) => !s)}
+                  aria-expanded={isProfileOpen}
+                  className="flex items-center text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
+                >
                   <i className="fa-solid fa-user-circle mr-2"></i>
-                  {currentUser.name}
+                  {userName}
                   <i className="fa-solid fa-chevron-down ml-2 text-xs"></i>
                 </button>
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg py-2 z-50 hidden group-hover:block">
+                <div className={`absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg py-2 z-50 ${isProfileOpen ? 'block' : 'hidden'}`}>
                   <Link 
                     to="/dashboard" 
+                    onClick={() => setIsProfileOpen(false)}
                     className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     Dashboard
                   </Link>
                   <Link 
                     to="/profile" 
+                    onClick={() => setIsProfileOpen(false)}
                     className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     Edit Profile
                   </Link>
                   <button 
-                    onClick={logout}
+                    onClick={() => { logout(); setIsProfileOpen(false); }}
                     className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     <i className="fa-solid fa-sign-out-alt mr-1"></i> Logout
@@ -161,28 +191,34 @@ export default function Header() {
               </Link>
               
               {/* Login or user profile */}
-              {currentUser?.isAuthenticated ? (
-                <div className="relative group">
-                  <button className="flex items-center text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors">
+              {isAuthenticated ? (
+                <div ref={profileRef} className="relative">
+                  <button
+                    onClick={() => setIsProfileOpen((s) => !s)}
+                    aria-expanded={isProfileOpen}
+                    className="flex items-center text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
+                  >
                     <i className="fa-solid fa-user-circle mr-2"></i>
-                    {currentUser.name}
+                    {userName}
                     <i className="fa-solid fa-chevron-down ml-2 text-xs"></i>
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg py-2 z-50 hidden group-hover:block">
+                  <div className={`absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg py-2 z-50 ${isProfileOpen ? 'block' : 'hidden'}`}>
                     <Link 
                       to="/dashboard" 
+                      onClick={() => setIsProfileOpen(false)}
                       className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       Dashboard
                     </Link>
                     <Link 
                       to="/profile" 
+                      onClick={() => setIsProfileOpen(false)}
                       className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       Edit Profile
                     </Link>
                     <button 
-                      onClick={logout}
+                      onClick={() => { logout(); setIsProfileOpen(false); }}
                       className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       <i className="fa-solid fa-sign-out-alt mr-1"></i> Logout
@@ -364,7 +400,7 @@ export default function Header() {
                     <i className="fa-solid fa-info-circle mr-2"></i>About Us
                   </Link>
                   
-                  {currentUser?.isAuthenticated ? (
+                  {isAuthenticated ? (
                     <>
                       <Link 
                         to="/dashboard" 
