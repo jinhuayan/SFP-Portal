@@ -57,10 +57,10 @@ export default function Dashboard() {
     { id: '3', animalName: 'Rocky', applicantName: 'Emily Wilson', date: '2025-11-20', time: '11:00 AM' },
   ];
   
-  const isAdmin = currentUser.role.includes('Admin');
-  const isFosterOrSuperFoster = currentUser.role.includes('Foster') || currentUser.role.includes('Super Foster');
-  const isInterviewer = currentUser.role.includes('Interviewer');
-  const isAdopter = currentUser.role.includes('Adopter');
+  const isAdmin = currentUser.role.includes('admin');
+  const isFosterOrSuperFoster = currentUser.role.includes('foster') || currentUser.role.includes('super foster');
+  const isInterviewer = currentUser.role.includes('interviewer');
+  const isAdopter = currentUser.role.includes('adopter');
   
   return (
     <div className="min-h-screen py-12 bg-white dark:bg-gray-900">

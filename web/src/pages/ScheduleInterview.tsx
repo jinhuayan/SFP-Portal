@@ -52,8 +52,8 @@ export default function ScheduleInterview() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Check if user has permission to schedule interviews
-  const isAdmin = currentUser?.role.includes('Admin');
-  const isInterviewer = currentUser?.role.includes('Interviewer');
+  const isAdmin = currentUser?.role.includes('admin');
+  const isInterviewer = currentUser?.role.includes('interviewer');
   
   if (!isAdmin && !isInterviewer) {
     return (

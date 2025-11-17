@@ -11,10 +11,10 @@ export default function AnimalManagement() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   
-  const isAdmin = currentUser?.role.includes('Admin');
-  const isSuperFoster = currentUser?.role.includes('Super Foster');
-  
-  if (!currentUser || (!isAdmin && !currentUser.role.includes('Foster') && !isSuperFoster)) {
+  const isAdmin = currentUser?.role.includes('admin');
+  const isSuperFoster = currentUser?.role.includes('super foster');
+
+  if (!currentUser || (!isAdmin && !currentUser.role.includes('foster') && !isSuperFoster)) {
     return (
       <div className="min-h-screen py-12 bg-[#FFDF4] dark:bg-gray-800/50">
         <div className="container mx-auto px-4">

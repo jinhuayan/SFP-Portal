@@ -50,41 +50,48 @@ export default function LoginPage() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Please enter both email and password');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const user = mockUsers.find(u => u.email === email && u.password === password);
-      
-      if (user) {
-        login(user);
-        toast.success(`Welcome back, ${user.name}!`);
-        
-        // Redirect based on user role
-        if (user.role.includes('Admin')) {
-          navigate('/dashboard');
-        } else if (user.role.includes('Interviewer')) {
-          navigate('/applications/manage');
-        } else if (user.role.includes('Foster') || user.role.includes('Super Foster')) {
-          navigate('/animals/manage');
-        } else {
-          navigate('/dashboard');
-        }
+  // using api call for login
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      // Save token and user info (e.g., in context or localStorage)
+      login({
+        id: data.volunteer.id,
+        name: data.volunteer.name,
+        email: data.volunteer.email,
+        role: [data.volunteer.role],
+        token: data.token,
+      });
+      toast.success(`Welcome back, ${data.volunteer.name}!`);
+      // Redirect based on role...
+      if (data.volunteer.role === 'admin') {
+        navigate('/dashboard');
+      } else if (data.volunteer.role === 'interviewer') {
+        navigate('/applications/manage');
+      } else if (data.volunteer.role === 'foster') {
+        navigate('/animals/manage');
       } else {
-        toast.error('Invalid email or password');
+        navigate('/dashboard');
       }
-      
-      setIsSubmitting(false);
-    }, 1000);
-  };
+    } else {
+      toast.error(data.message || 'Invalid email or password');
+    }
+  } catch (err) {
+    toast.error('Login failed. Please try again.');
+  }
+  setIsSubmitting(false);
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#FFDF4] dark:bg-gray-900">

@@ -13,11 +13,10 @@ export default function Header() {
     return user && typeof user === 'object' && Array.isArray(user.role) && typeof user.name === 'string';
   };
 
-  const isAdmin = isUserObject(currentUser) && currentUser.role.includes('Admin');
-  const isFoster = isUserObject(currentUser) && currentUser.role.includes('Foster') && !currentUser.role.includes('Super Foster');
-  const isSuperFoster = isUserObject(currentUser) && currentUser.role.includes('Super Foster');
-  const isInterviewer = isUserObject(currentUser) && currentUser.role.includes('Interviewer');
-  const isAdopter = isUserObject(currentUser) && currentUser.role.includes('Adopter') && !isAdmin && !isFoster && !isSuperFoster && !isInterviewer;
+  const isAdmin = isUserObject(currentUser) && currentUser.role.includes('admin');
+  const isFoster = isUserObject(currentUser) && currentUser.role.includes('foster') && !currentUser.role.includes('super foster');
+  const isSuperFoster = isUserObject(currentUser) && currentUser.role.includes('super foster');
+  const isInterviewer = isUserObject(currentUser) && currentUser.role.includes('interviewer');
   const isAuthenticated = isUserObject(currentUser) && currentUser.isAuthenticated;
   const userName = isUserObject(currentUser) ? currentUser.name : 'User';
 

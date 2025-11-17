@@ -56,7 +56,7 @@ export default function ApplicationDetails() {
   const animal = getAnimalById(application.animalId);
   
   // Check if user has permission to view this application
-  const isAdmin = currentUser?.role.includes('Admin');
+  const isAdmin = currentUser?.role.includes('admin');
   const isAssignedInterviewer = currentUser?.id === application.assignedTo;
   
   if (!isAdmin && !isAssignedInterviewer) {

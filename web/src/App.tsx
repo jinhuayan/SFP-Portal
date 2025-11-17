@@ -72,58 +72,44 @@ export default function App() {
              } />
               {/* Application Management Routes */}
             <Route path="/applications/detail/:id" element={
-              <ProtectedRoute requiredRoles={['Interviewer', 'Admin']}>
+              <ProtectedRoute requiredRoles={['interviewer', 'admin']}>
                 <ApplicationDetails />
               </ProtectedRoute>
             } />
             
              <Route path="/contract/:id" element={
-               <ProtectedRoute requiredRoles={['Adopter']}>
+               <ProtectedRoute requiredRoles={['adopter']}>
                  <ContractPage />
                </ProtectedRoute>
              } />
              
              {/* Sign Contract Route */}
              <Route path="/sign-contract/:id" element={
-               <ProtectedRoute requiredRoles={['Adopter']}>
+               <ProtectedRoute requiredRoles={['adopter']}>
                  <SignContractPage />
                </ProtectedRoute>
              } />
             
             <Route path="/animals/manage" element={
-              <ProtectedRoute requiredRoles={['Foster', 'Super Foster', 'Admin']}>
+              <ProtectedRoute requiredRoles={['foster', 'super foster', 'admin']}>
                 <AnimalManagement />
               </ProtectedRoute>
             } />
             
             <Route path="/applications/manage" element={
-              <ProtectedRoute requiredRoles={['Interviewer', 'Admin']}>
+              <ProtectedRoute requiredRoles={['interviewer', 'admin']}>
                 <ApplicationManagement />
               </ProtectedRoute>
             } />
             
              <Route path="/users/manage" element={
-              <ProtectedRoute requiredRoles={['Admin']}>
+              <ProtectedRoute requiredRoles={['admin']}>
                 <UserManagement />
               </ProtectedRoute>
             } />
             {/* Assign Interviewers Route */}
-            {/* <Route path="/interviewers/assign" element={
-              <ProtectedRoute requiredRoles={['Admin']}>
-                <div className="min-h-screen py-12 bg-white dark:bg-gray-900">
-                  <div className="container mx-auto px-4">
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">Assign Interviewers to Animals</h1>
-                    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-6 max-w-4xl mx-auto">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Assigning interviewers functionality is currently being developed. Please check back soon!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </ProtectedRoute>
-            } /> */}
             <Route path="/interviewers/assign" element={
-              <ProtectedRoute requiredRoles={['Admin']}>
+              <ProtectedRoute requiredRoles={['admin']}>
                 <AssignInterviewer />
               </ProtectedRoute>
             } />  
@@ -145,12 +131,12 @@ export default function App() {
             } />
               {/* Add Animal Management Routes */}
              <Route path="/animals/add" element={
-               <ProtectedRoute requiredRoles={['Foster', 'Super Foster', 'Admin']}>
+               <ProtectedRoute requiredRoles={['foster', 'super foster', 'admin']}>
                  <AddAnimal />
                </ProtectedRoute>
              } />
             <Route path="/animals/edit/:id" element={
-              <ProtectedRoute requiredRoles={['Foster', 'Super Foster', 'Admin']}>
+              <ProtectedRoute requiredRoles={['foster', 'super foster', 'admin']}>
                 <div className="min-h-screen py-12 bg-white dark:bg-gray-900">
                   <div className="container mx-auto px-4">
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">Edit Animal</h1>
@@ -164,7 +150,7 @@ export default function App() {
               </ProtectedRoute>
             } />
             <Route path="/animals/detail/:id" element={
-              <ProtectedRoute requiredRoles={['Foster', 'Super Foster', 'Admin', 'Interviewer']}>
+              <ProtectedRoute requiredRoles={['foster', 'super foster', 'admin', 'interviewer']}>
                 <div className="min-h-screen py-12 bg-white dark:bg-gray-900">
                   <div className="container mx-auto px-4">
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">Animal Details (Internal)</h1>
@@ -179,13 +165,13 @@ export default function App() {
             } />
             {/* Interview Scheduling Route */}
             <Route path="/interviews/schedule/:id" element={
-              <ProtectedRoute requiredRoles={['Interviewer', 'Admin']}>
+              <ProtectedRoute requiredRoles={['interviewer', 'admin']}>
                 <ScheduleInterview />
               </ProtectedRoute>
             } />
             {/* Contract Signing Route */}
             <Route path="/contract/sign/:id" element={
-              <ProtectedRoute requiredRoles={['Adopter']}>
+              <ProtectedRoute requiredRoles={['adopter']}>
                 <div className="min-h-screen py-12 bg-white dark:bg-gray-900">
                   <div className="container mx-auto px-4">
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">Sign Adoption Contract</h1>

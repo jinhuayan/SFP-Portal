@@ -49,7 +49,7 @@ export default function AssignInterviewer() {
   const [searchInterviewer, setSearchInterviewer] = useState('');
 
   // Check if user is admin
-  if (!currentUser || !currentUser.role.includes('Admin')) {
+  if (!currentUser || !currentUser.role.includes('admin')) {
     return (
       <div className="min-h-screen py-12 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
