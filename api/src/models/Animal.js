@@ -40,6 +40,7 @@ const Animal = sequelize.define(
     size: {
       type: DataTypes.ENUM("Small", "Medium", "Large"),
       allowNull: false,
+      defaultValue: "Medium",
     },
     color: {
       type: DataTypes.STRING,
@@ -113,6 +114,26 @@ const Animal = sequelize.define(
       ),
       allowNull: false,
       defaultValue: "Draft",
+    },
+    microchip_number: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    medical_history: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    behavior_notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    intake_source: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    internal_notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
   {

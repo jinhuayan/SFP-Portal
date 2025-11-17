@@ -3,6 +3,7 @@ import {
   getAllAnimals,
   getAnimalById,
   getAvailableAnimals,
+  getAdoptedAnimals,
   createAnimal,
   updateAnimal,
   updateAnimalState,
@@ -15,6 +16,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/available", getAvailableAnimals);
+router.get("/adopted", getAdoptedAnimals);
 router.get("/:id", getAnimalById);
 // Volunteer-only: list all animals (internal view)
 router.get("/", authMiddleware, roleMiddleware("VOLUNTEER"), getAllAnimals);

@@ -123,17 +123,9 @@ const startServer = async () => {
     // Test database connection
     await testConnection();
 
-    // Synchronize models with database (in development, only if DB is connected)
-    if (process.env.NODE_ENV !== "production" && !useMockDB) {
-      try {
-        // For development, we can auto-sync models
-        // In production, use migrations
-        await sequelize.sync({ alter: true });
-        console.log("✓ Database models synchronized");
-      } catch (error) {
-        console.warn("⚠ Failed to sync models:", error.message);
-      }
-    }
+    // Database schema is managed via migrations (src/migrations/runMigrations.js)
+    // No auto-sync needed - tables are already created correctly
+    console.log("✓ Using migration-managed schema");
 
     // Start server
     const PORT = process.env.PORT || 5000;

@@ -15,6 +15,12 @@ const runMigrations = async () => {
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
+    // Drop old enum types that may conflict
+    await sequelize.query("DROP TYPE IF EXISTS enum_animals_status CASCADE;");
+    await sequelize.query("DROP TYPE IF EXISTS enum_animals_sex CASCADE;");
+    await sequelize.query("DROP TYPE IF EXISTS enum_animals_size CASCADE;");
+    console.log("✓ Dropped old enum types");
+
     // Drop all tables and recreate them with the new schema
     await sequelize.sync({ force: true });
 

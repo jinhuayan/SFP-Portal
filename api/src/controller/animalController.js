@@ -44,6 +44,19 @@ export const getAvailableAnimals = async (req, res, next) => {
   }
 };
 
+export const getAdoptedAnimals = async (req, res, next) => {
+  try {
+    const adoptedAnimals = await Animal.findAll({
+      where: { status: "Adopted" },
+      include: [{ model: Volunteer }],
+    });
+
+    res.status(200).json(adoptedAnimals);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createAnimal = async (req, res, next) => {
   try {
     // Validate request
