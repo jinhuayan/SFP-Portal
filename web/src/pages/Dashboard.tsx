@@ -46,7 +46,7 @@ export default function Dashboard() {
   
   // Get recently added animals
   const recentlyAdded = mockAnimals
-    .filter(animal => animal.status === 'Published')
+    .filter(animal => animal.status === 'published')
     .sort((a, b) => new Date(b.intakeDate).getTime() - new Date(a.intakeDate).getTime())
     .slice(0, 3);
   
@@ -379,8 +379,8 @@ export default function Dashboard() {
                           <p className="text-sm text-gray-500 dark:text-gray-400">{animal.uniqueId} • {animal.breed}</p>
                         </div>
                         <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                          animal.status === 'Published' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                          animal.status === 'Draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                          animal.status === 'published' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                          animal.status === 'draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
                           'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                         }`}>
                           {animal.status}

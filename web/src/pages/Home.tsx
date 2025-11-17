@@ -13,12 +13,12 @@ export default function Home() {
   
   // Get the first 3 published animals for featured section
   const featuredAnimals = mockAnimals
-    .filter(animal => animal.status === 'Published')
+    .filter(animal => animal.status === 'published')
     .slice(0, 3);
   
   // Get some success stories
   const successStories = mockAnimals
-    .filter(animal => animal.status === 'Adopted' && animal.adoptionStory)
+    .filter(animal => animal.status === 'adopted' && animal.adoptionStory)
     .slice(0, 2);
   
   return (

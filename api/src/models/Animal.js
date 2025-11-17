@@ -103,17 +103,17 @@ const Animal = sequelize.define(
     },
     status: {
       type: DataTypes.ENUM(
-        "Draft",
-        "Fostering",
-        "Ready for Adoption",
-        "Published",
-        "Interviewing",
-        "Reserved",
-        "Adopted",
-        "Archived"
-      ),
+    "draft",
+    "fostering",
+    "ready",
+    "published",
+    "interviewing",
+    "reserved",
+    "adopted",
+    "archived"
+  ),
       allowNull: false,
-      defaultValue: "Draft",
+      defaultValue: "draft",
     },
     microchip_number: {
       type: DataTypes.STRING(50),
