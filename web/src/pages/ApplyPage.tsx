@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getAnimalById } from '@/data/mockAnimals';
 import { toast } from 'sonner';
 import { z } from 'zod';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Define the form schema using Zod
 const adoptionFormSchema = z.object({
@@ -29,10 +30,40 @@ const adoptionFormSchema = z.object({
 
 type AdoptionFormData = z.infer<typeof adoptionFormSchema>;
 
+const toSnakeCase = (obj: any) => {
+  const map: Record<string, string> = {
+    fullName: 'full_name',
+    email: 'email',
+    phone: 'phone',
+    address: 'address',
+    city: 'city',
+    state: 'state',
+    zipCode: 'zip_code',
+    householdType: 'household_type',
+    hasChildren: 'has_children',
+    childrenAges: 'children_ages',
+    hasOtherPets: 'has_other_pets',
+    otherPetsDetails: 'other_pets_details',
+    experienceWithPets: 'experience_with_pets',
+    hoursAway: 'hours_away',
+    reasonForAdoption: 'reason_for_adoption',
+    emergencyContactName: 'emergency_contact_name',
+    emergencyContactPhone: 'emergency_contact_phone',
+    agreeToTerms: 'agreed_to_terms',
+  };
+  const out: any = {};
+  Object.keys(obj).forEach((key) => {
+    out[map[key] || key] = obj[key];
+  });
+  return out;
+};
+
 export default function ApplyPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const animal = getAnimalById(id || '');
+  const [animal, setAnimal] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   
   // Form state
   const [formData, setFormData] = useState<AdoptionFormData>({
@@ -58,10 +89,58 @@ export default function ApplyPage() {
   
   const [errors, setErrors] = useState<Partial<Record<keyof AdoptionFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      setError('');
+      fetch(`${API_BASE_URL}/api/animals/${id}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch animal');
+          return res.json();
+        })
+        .then(data => {
+          setAnimal({
+            id: data.id,
+            uniqueId: data.unique_id || data.uniqueId,
+            name: data.name,
+            species: data.species,
+            breed: data.breed,
+            age: data.age,
+            sex: data.sex,
+            size: data.size,
+            color: data.color,
+            description: data.description,
+            personality: Array.isArray(data.personality) ? data.personality : [],
+            imageUrls: data.image_urls || data.imageUrls || [],
+            adoptionFee: data.adoption_fee || data.adoptionFee,
+            intakeDate: data.intake_date || data.intakeDate,
+            postedDate: data.posted_date || data.postedDate,
+            status: data.status,
+            adoptionDate: data.adoption_date || data.adoptionDate,
+            adoptionStory: data.adoption_story || data.adoptionStory,
+            goodWith: {
+              children: data.good_with_children ?? false,
+              dogs: data.good_with_dogs ?? false,
+              cats: data.good_with_cats ?? false,
+            },
+            location: data.location,
+            vaccinated: data.vaccinated ?? false,
+            neutered: data.neutered ?? false,
+          });
+        })
+        .catch(() => setError('Could not load animal details.'))
+        .finally(() => setLoading(false));
+    }
+  }, [id]);
+
+  if (loading) {
+    return <div className="min-h-screen py-12 bg-white dark:bg-gray-900 text-center text-lg text-gray-500">Loading animal details...</div>;
+  }
   
-  if (!animal) {
+  if (error || !animal) {
     return (
-     <div className="min-h-screen py-12 bg-[#FFDF4] dark:bg-gray-800/50">
+      <div className="min-h-screen py-12 bg-[#FFDF4] dark:bg-gray-800/50">
         <div className="container mx-auto px-4">
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-12 text-center">
             <div className="flex flex-col items-center justify-center">
@@ -124,7 +203,7 @@ export default function ApplyPage() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       // Scroll to the first error
       const firstErrorField = document.querySelector('[aria-invalid="true"]');
@@ -133,30 +212,34 @@ export default function ApplyPage() {
       }
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
+    // Prepare payload: set empty optional fields to null
+    const rawPayload = toSnakeCase(formData);
+    const payload = {
+      animal_id: animal.uniqueId,
+      ...rawPayload,
+      children_ages: formData.hasChildren && (formData.childrenAges ?? '').trim() ? formData.childrenAges : null,
+      other_pets_details: formData.hasOtherPets && (formData.otherPetsDetails ?? '').trim() ? formData.otherPetsDetails : null,
+    };
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-       // Check if user is logged in
-      const isUserLoggedIn = !!localStorage.getItem('currentUser');
-      
-      if (!isUserLoggedIn) {
-        // Simulate account creation since user is not logged in
-        toast.success(`Your application to adopt ${animal.name} (${animal.uniqueId}) has been submitted successfully!`, {
-          description: "An account has been created for you. Check your email for login details."
-        });
-      } else {
-        toast.success(`Your application to adopt ${animal.name} (${animal.uniqueId}) has been submitted successfully!`);
-      }
-      
-      // Redirect after successful submission
+      const response = await fetch(`${API_BASE_URL}/api/applications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error('Failed to submit application');
+      await response.json();
+      toast.success(`Your application to adopt ${animal.name} (${animal.uniqueId}) has been submitted successfully!`);
       setTimeout(() => {
         navigate(`/animal/${animal.id}`);
       }, 3000);
     } catch (error) {
+      console.error(error);
       toast.error('Failed to submit application. Please try again later.');
     } finally {
       setIsSubmitting(false);

@@ -1,9 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import AnimalCard from './AnimalCard';
-import { Animal, filterAnimals, calculateDaysInSFP } from '@/data/mockAnimals';
+import { calculateDaysInSFP } from '@/data/mockAnimals';
+
+// Utility to normalize backend animal data to frontend format
+function normalizeAnimal(animal: any) {
+  return {
+    id: animal.id,
+    uniqueId: animal.unique_id || animal.uniqueId,
+    name: animal.name,
+    species: animal.species,
+    breed: animal.breed,
+    age: animal.age,
+    sex: animal.sex,
+    size: animal.size,
+    color: animal.color,
+    description: animal.description,
+    personality: Array.isArray(animal.personality) ? animal.personality : [],
+    imageUrls: animal.image_urls || animal.imageUrls || [],
+    adoptionFee: animal.adoption_fee || animal.adoptionFee,
+    intakeDate: animal.intake_date || animal.intakeDate,
+    postedDate: animal.posted_date || animal.postedDate,
+    status: animal.status,
+    adoptionDate: animal.adoption_date || animal.adoptionDate,
+    adoptionStory: animal.adoption_story || animal.adoptionStory,
+    goodWith: {
+      children: animal.good_with_children ?? false,
+      dogs: animal.good_with_dogs ?? false,
+      cats: animal.good_with_cats ?? false,
+    },
+    location: animal.location,
+    // Add other fields as needed
+  };
+}
 
 interface AnimalListProps {
-  animals: Animal[];
+  animals?: any[];
   onFilterChange?: (filters: {
     species?: string;
     age?: string;
@@ -13,7 +44,9 @@ interface AnimalListProps {
   showAdopted?: boolean;
 }
 
-const AnimalList: React.FC<AnimalListProps> = ({ animals, onFilterChange, showAdopted = false }) => {
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const AnimalList: React.FC<AnimalListProps> = ({ onFilterChange, showAdopted = false }) => {
   const [filters, setFilters] = useState({
     species: '',
     age: '',
@@ -22,53 +55,67 @@ const AnimalList: React.FC<AnimalListProps> = ({ animals, onFilterChange, showAd
     location: '',
     price: ''
   });
-  const [filteredAnimals, setFilteredAnimals] = useState<Animal[]>([]);
+  const [animals, setAnimals] = useState<any[]>([]);
+  const [filteredAnimals, setFilteredAnimals] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function fetchAnimals() {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/animals/available`);
+        if (!res.ok) throw new Error('Failed to fetch animals');
+        const data = await res.json();
+        setAnimals(data.map(normalizeAnimal));
+      } catch (err) {
+        setError('Could not load animals. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAnimals();
+  }, []);
 
   useEffect(() => {
     // Apply filters
-    let result = filterAnimals(
-      filters.species || undefined, 
-      filters.age || undefined, 
-      filters.size || undefined, 
-      filters.goodWith || undefined,
-      showAdopted ? 'Adopted' : 'Published'
-    );
-    
-    // Apply location filter for PetSmart/PetValu
-    if (filters.location) {
-      result = result.filter(animal => 
-        animal.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
+    let result = animals;
+    if (filters.species) {
+      result = result.filter(animal => animal.species === filters.species);
     }
-    
-    // Apply price filter
+    if (filters.age) {
+      result = result.filter(animal => animal.age === filters.age);
+    }
+    if (filters.size) {
+      result = result.filter(animal => animal.size === filters.size);
+    }
+    if (filters.goodWith) {
+      if (filters.goodWith === 'children') result = result.filter(animal => animal.goodWith.children);
+      if (filters.goodWith === 'dogs') result = result.filter(animal => animal.goodWith.dogs);
+      if (filters.goodWith === 'cats') result = result.filter(animal => animal.goodWith.cats);
+    }
+    if (filters.location) {
+      result = result.filter(animal => animal.location && animal.location.toLowerCase().includes(filters.location.toLowerCase()));
+    }
     if (filters.price) {
       const [min, max] = filters.price.split('-').map(Number);
-      result = result.filter(animal => 
-        (!isNaN(min) && !isNaN(max)) 
-          ? animal.adoptionFee >= min && animal.adoptionFee <= max
-          : animal.adoptionFee <= min
-      );
+      result = result.filter(animal => (!isNaN(min) && !isNaN(max)) ? animal.adoptionFee >= min && animal.adoptionFee <= max : animal.adoptionFee <= min);
     }
-    
-    // Apply search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(animal => 
-        animal.name.toLowerCase().includes(term) || 
-        animal.breed.toLowerCase().includes(term) || 
+      result = result.filter(animal =>
+        animal.name.toLowerCase().includes(term) ||
+        animal.breed.toLowerCase().includes(term) ||
         animal.description.toLowerCase().includes(term) ||
         animal.uniqueId.toLowerCase().includes(term) ||
-        animal.personality.some(p => p.toLowerCase().includes(term)) ||
+        animal.personality.some((p: string) => p.toLowerCase().includes(term)) ||
         (animal.adoptionStory && animal.adoptionStory.toLowerCase().includes(term))
       );
     }
-    
     setFilteredAnimals(result);
-    
-    // Notify parent component of filter changes
     if (onFilterChange) {
       onFilterChange(filters);
     }
@@ -452,7 +499,7 @@ const AnimalList: React.FC<AnimalListProps> = ({ animals, onFilterChange, showAd
                 {!showAdopted && (
                   <>
                     <div className="flex flex-wrap gap-1.5 mb-4">
-                      {animal.personality.map((trait, index) => (
+                      {animal.personality.map((trait: string, index: number) => (
                         <span 
                           key={index}
                           className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full"
@@ -479,6 +526,14 @@ const AnimalList: React.FC<AnimalListProps> = ({ animals, onFilterChange, showAd
       );
     }
   };
+
+  if (loading) {
+    return <div className="text-center py-8 text-lg text-gray-500">Loading animals...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>;
+  }
 
   return (
     <div>
