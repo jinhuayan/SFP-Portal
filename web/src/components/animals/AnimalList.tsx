@@ -46,7 +46,7 @@ interface AnimalListProps {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const AnimalList: React.FC<AnimalListProps> = ({ onFilterChange, showAdopted = false }) => {
+const AnimalList: React.FC<AnimalListProps> = ({ animals: propsAnimals, onFilterChange, showAdopted = false }) => {
   const [filters, setFilters] = useState({
     species: '',
     age: '',
@@ -62,12 +62,24 @@ const AnimalList: React.FC<AnimalListProps> = ({ onFilterChange, showAdopted = f
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Fetch animals only if not provided via props
   useEffect(() => {
     async function fetchAnimals() {
+      // If animals are provided via props, use them instead
+      if (propsAnimals && propsAnimals.length > 0) {
+        setAnimals(propsAnimals.map(normalizeAnimal));
+        setLoading(false);
+        return;
+      }
+
+      // Otherwise, fetch available animals
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`${API_BASE_URL}/api/animals/available`);
+        const endpoint = showAdopted 
+          ? `${API_BASE_URL}/api/animals/adopted`
+          : `${API_BASE_URL}/api/animals/available`;
+        const res = await fetch(endpoint);
         if (!res.ok) throw new Error('Failed to fetch animals');
         const data = await res.json();
         setAnimals(data.map(normalizeAnimal));
@@ -78,7 +90,7 @@ const AnimalList: React.FC<AnimalListProps> = ({ onFilterChange, showAdopted = f
       }
     }
     fetchAnimals();
-  }, []);
+  }, [propsAnimals, showAdopted]);
 
   useEffect(() => {
     // Apply filters

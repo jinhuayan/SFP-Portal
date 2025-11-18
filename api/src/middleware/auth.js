@@ -17,8 +17,13 @@ export const authMiddleware = (req, res, next) => {
       return next();
     }
 
-    // Get token from header
-    const token = req.header("Authorization")?.replace("Bearer ", "");
+    // Try to get token from cookie first, then fall back to Authorization header
+    let token = req.cookies?.auth_token;
+    
+    if (!token) {
+      // Fall back to Authorization header for backward compatibility
+      token = req.header("Authorization")?.replace("Bearer ", "");
+    }
 
     if (!token) {
       return res.status(401).json({ message: "Authentication required" });

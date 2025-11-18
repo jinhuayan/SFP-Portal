@@ -16,7 +16,7 @@ const sequelize = new Sequelize(
     port: process.env.DB_PORT || 5432,
     dialect: "postgres",
     logging: false, // Disable logging to avoid deprecation warning
-    connectionTimeoutMillis: 5000,
+    connectionTimeoutMillis: 5001,
   }
 );
 

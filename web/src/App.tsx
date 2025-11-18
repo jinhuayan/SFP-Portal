@@ -16,11 +16,11 @@ import UserManagement from "@/pages/UserManagement";
 import SignContractPage from "@/pages/SignContractPage";
 import ApplicationDetails from "@/pages/ApplicationDetails";
 import ScheduleInterview from "@/pages/ScheduleInterview";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuthContext } from '@/contexts/authContext';
-import { useTheme } from '@/hooks/useTheme';
 import ProtectedRoute from "@/components/common/ProtectedRoute";
 import AssignInterviewer from "./pages/AssignInterviewer";
+import { getUserFromCookie, deleteCookie } from '@/lib/cookies';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<{
@@ -28,27 +28,63 @@ export default function App() {
     name: string;
     email: string;
     role: string[];
+    token?: string;
     isAuthenticated: boolean;
   } | null>(null);
   
-  const { isDark } = useTheme();
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  
+  // Restore session from cookie on app initialization
+  useEffect(() => {
+    console.log('App mounting - checking for cookies...');
+    console.log('All cookies:', document.cookie);
+    
+    const user = getUserFromCookie();
+    console.log('👤 User from cookie:', user);
+    
+    if (user) {
+      setCurrentUser(user);
+    } else {
+      console.log('❌ No user session found in cookies');
+    }
+    
+    // Mark session loading as complete
+    setIsLoadingSession(false);
+  }, []);
   
   const login = (user: {
     id: string;
     name: string;
     email: string;
     role: string[];
+    token?: string;
   }) => {
-    setCurrentUser({ ...user, isAuthenticated: true });
+    const userWithAuth = { ...user, isAuthenticated: true };
+    setCurrentUser(userWithAuth);
+    // No need to manually set cookie - backend sets it via Set-Cookie header
   };
   
-  const logout = () => {
+  const logout = async () => {
+    try {
+      // Call logout API to clear httpOnly cookie
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',  // Include cookies in request
+      });
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    }
+    
+    // Clear client-side state and cookies
     setCurrentUser(null);
+    deleteCookie('user_info');
+    deleteCookie('auth_token');
   };
 
   return (
     <AuthContext.Provider
-      value={{ currentUser, login, logout }}
+      value={{ currentUser, login, logout, isLoadingSession }}
     >
       <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
         <Header />

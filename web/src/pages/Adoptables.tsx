@@ -1,24 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import AnimalList from '@/components/animals/AnimalList';
 
 export default function Adoptables() {
   const [activeTab, setActiveTab] = useState('all');
-  const [animals, setAnimals] = useState<any[]>([]);
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-  useEffect(() => {
-    async function fetchAnimals() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/animals/available`);
-        if (!res.ok) throw new Error('Failed to fetch animals');
-        const data = await res.json();
-        setAnimals(data);
-      } catch (err) {
-      }
-    }
-    fetchAnimals();
-  }, [API_BASE_URL]);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -74,9 +59,7 @@ export default function Adoptables() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <AnimalList 
-            animals={animals} 
-          />
+          <AnimalList />
         </motion.div>
       </div>
     </div>

@@ -11,10 +11,12 @@ export interface AuthUser {
 
 export const AuthContext = createContext<{
   currentUser: AuthUser | null;
-  login: (user: AuthUser) => void;
+  login: (user: Omit<AuthUser, 'isAuthenticated'>) => void;
   logout: () => void;
+  isLoadingSession?: boolean;
 }>({
   currentUser: null,
   login: () => {},
   logout: () => {},
+  isLoadingSession: true,
 });

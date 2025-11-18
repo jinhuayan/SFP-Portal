@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { sequelize, testConnection, useMockDB } from "./config/database.js";
 import { mockUsers, mockAnimals } from "./mockData.js";
 
@@ -25,9 +26,14 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+// CORS configuration for cookies
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,  // Allow cookies to be sent
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());  // Parse cookies
 
 // Metrics middleware: simple instrumentation for Prometheus
 app.use(metricsMiddleware);

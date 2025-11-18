@@ -1,8 +1,7 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
-import { mockAnimals } from '@/data/mockAnimals';
 import { calculateDaysInSFP } from '@/data/mockAnimals';
 import { toast } from 'sonner';
 
@@ -10,9 +9,58 @@ export default function AnimalManagement() {
   const { currentUser } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [animals, setAnimals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   
   const isAdmin = currentUser?.role.includes('admin');
   const isSuperFoster = currentUser?.role.includes('super foster');
+
+  // Fetch animals from API
+  useEffect(() => {
+    async function fetchAnimals() {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_BASE_URL}/api/animals`, {
+          credentials: 'include', // Include auth cookies
+        });
+        
+        if (!res.ok) throw new Error('Failed to fetch animals');
+        
+        const data = await res.json();
+        
+        // Normalize the data from backend
+        const normalizedAnimals = data.map((animal: any) => ({
+          id: animal.id,
+          uniqueId: animal.unique_id,
+          name: animal.name,
+          species: animal.species,
+          breed: animal.breed,
+          age: animal.age || 'Unknown',
+          sex: animal.gender || animal.sex,
+          size: animal.size || 'Medium',
+          color: animal.color,
+          description: animal.description,
+          imageUrls: animal.image_urls || [],
+          adoptionFee: animal.price || animal.adoption_fee || 0,
+          intakeDate: animal.intake_date || animal.created_at,
+          status: animal.status || 'draft',
+          location: animal.location || 'Foster Care',
+        }));
+        
+        setAnimals(normalizedAnimals);
+      } catch (err) {
+        console.error('Error fetching animals:', err);
+        toast.error('Failed to load animals');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    if (currentUser) {
+      fetchAnimals();
+    }
+  }, [API_BASE_URL, currentUser]);
 
   if (!currentUser || (!isAdmin && !currentUser.role.includes('foster') && !isSuperFoster)) {
     return (
@@ -40,18 +88,8 @@ export default function AnimalManagement() {
     );
   }
   
-  // Filter animals based on user role
-  let filteredAnimals = mockAnimals;
-  if (!isAdmin) {
-    if (!isSuperFoster) {
-      // Regular foster only sees their own animals
-      filteredAnimals = mockAnimals.filter(animal => {
-        // In a real app, this would check the animal's foster ID against the current user's ID
-        return animal.id === '1' || animal.id === '2';
-      });
-    }
-    // Super Foster can see all animals but with restricted editing permissions
-  }
+  // Filter animals based on search and tab
+  let filteredAnimals = animals;
   
   // Apply search
   if (searchTerm) {
@@ -200,7 +238,16 @@ export default function AnimalManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
-                {filteredAnimals.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-10 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <i className="fa-solid fa-spinner fa-spin text-4xl text-primary mb-4"></i>
+                        <p className="text-gray-600 dark:text-gray-400">Loading animals...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredAnimals.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-10 text-center">
                       <div className="flex flex-col items-center justify-center">

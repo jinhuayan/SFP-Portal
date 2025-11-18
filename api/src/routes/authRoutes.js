@@ -1,5 +1,5 @@
 import express from "express";
-import { login, verifyToken } from "../controller/authController.js";
+import { login, verifyToken, logout, getCurrentUser } from "../controller/authController.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { body } from "express-validator";
 
@@ -17,5 +17,7 @@ router.post(
 
 // Protected routes
 router.get("/verify", authMiddleware, verifyToken);
+router.post("/logout", logout);
+router.get("/me", authMiddleware, getCurrentUser);
 
 export default router;

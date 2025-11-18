@@ -22,25 +22,30 @@ export default function LoginPage() {
     const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',  
       body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
     if (res.ok) {
-      // Save token and user info (e.g., in context or localStorage)
+      console.log('✅ Login successful, received data:', data);
+      // Backend sets cookies, just update context state
       login({
         id: data.volunteer.id,
         name: data.volunteer.name,
         email: data.volunteer.email,
-        role: [data.volunteer.role],
-        token: data.token,
+        role: Array.isArray(data.volunteer.role) ? data.volunteer.role : [data.volunteer.role],
       });
       toast.success(`Welcome back, ${data.volunteer.name}!`);
+      
+      // Get first role for routing
+      const userRole = Array.isArray(data.volunteer.role) ? data.volunteer.role[0] : data.volunteer.role;
+      
       // Redirect based on role...
-      if (data.volunteer.role === 'admin') {
+      if (userRole === 'admin') {
         navigate('/dashboard');
-      } else if (data.volunteer.role === 'interviewer') {
+      } else if (userRole === 'interviewer') {
         navigate('/applications/manage');
-      } else if (data.volunteer.role === 'foster') {
+      } else if (userRole === 'foster') {
         navigate('/animals/manage');
       } else {
         navigate('/dashboard');

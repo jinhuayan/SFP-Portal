@@ -1,5 +1,5 @@
 import { useState, useContext, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/hooks/useTheme';
 import { AuthContext } from '@/contexts/authContext';
 
@@ -7,6 +7,7 @@ export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { currentUser, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   // Type guard for currentUser
   const isUserObject = (user: any): user is { role: string[]; name: string; isAuthenticated: boolean } => {
@@ -140,7 +141,11 @@ export default function Header() {
                     Edit Profile
                   </Link>
                   <button 
-                    onClick={() => { logout(); setIsProfileOpen(false); }}
+                    onClick={async () => { 
+                      await logout(); 
+                      setIsProfileOpen(false); 
+                      navigate('/login');
+                    }}
                     className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     <i className="fa-solid fa-sign-out-alt mr-1"></i> Logout
@@ -217,7 +222,11 @@ export default function Header() {
                       Edit Profile
                     </Link>
                     <button 
-                      onClick={() => { logout(); setIsProfileOpen(false); }}
+                      onClick={async () => { 
+                        await logout(); 
+                        setIsProfileOpen(false); 
+                        navigate('/login');
+                      }}
                       className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       <i className="fa-solid fa-sign-out-alt mr-1"></i> Logout
@@ -358,9 +367,10 @@ export default function Header() {
                   </Link>
                   
                   <button 
-                    onClick={() => {
-                      logout();
+                    onClick={async () => {
+                      await logout();
                       setIsMenuOpen(false);
+                      navigate('/login');
                     }}
                     className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center"
                   >
@@ -418,9 +428,10 @@ export default function Header() {
                       </Link>
                       
                       <button 
-                        onClick={() => {
-                          logout();
+                        onClick={async () => {
+                          await logout();
                           setIsMenuOpen(false);
+                          navigate('/login');
                         }}
                         className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center"
                       >
