@@ -103,17 +103,33 @@ const Animal = sequelize.define(
     },
     status: {
       type: DataTypes.ENUM(
-    "draft",
-    "fostering",
-    "ready",
-    "published",
-    "interviewing",
-    "reserved",
-    "adopted",
-    "archived"
-  ),
+        "draft",
+        "fostering",
+        "ready",
+        "published",
+        "interviewing",
+        "reserved",
+        "adopted",
+        "archived"
+      ),
       allowNull: false,
       defaultValue: "draft",
+    },
+    // Volunteer who created/listed the animal
+    volunteer_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: "volunteers", key: "id" },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
+    },
+    // Assigned interviewer (one animal -> one interviewer; nullable by default)
+    interviewer_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: "volunteers", key: "id" },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
     },
     microchip_number: {
       type: DataTypes.STRING(50),

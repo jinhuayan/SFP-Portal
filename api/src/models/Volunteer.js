@@ -34,9 +34,14 @@ const Volunteer = sequelize.define(
       allowNull: false,
       defaultValue: "foster",
     },
+    status: {
+      type: DataTypes.ENUM("active", "inactive"),
+      allowNull: false,
+      defaultValue: "active",
+    },
   },
   {
-    timestamps: false,
+    timestamps: true,
     tableName: "volunteers",
   }
 );

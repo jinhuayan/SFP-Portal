@@ -15,6 +15,7 @@ async function seedVolunteers() {
         email: "admin@example.com",
         password: hashed,
         role: "admin",
+        status: "active",
       },
       {
         first_name: "Foster",
@@ -22,6 +23,7 @@ async function seedVolunteers() {
         email: "foster@example.com",
         password: hashed,
         role: "foster",
+        status: "active",
       },
       {
         first_name: "Interviewer",
@@ -29,6 +31,7 @@ async function seedVolunteers() {
         email: "interviewer@example.com",
         password: hashed,
         role: "interviewer",
+        status: "active",
       },
     ];
 

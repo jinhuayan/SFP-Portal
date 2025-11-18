@@ -46,12 +46,13 @@ router.get(
 router.post(
   "/",
   authMiddleware,
-  roleMiddleware("admin"),
+  roleMiddleware("admin", "interviewer"),
   [
     body("application_id")
       .isInt()
       .withMessage("Valid application ID is required"),
     body("volunteer_id")
+      .optional()
       .isInt()
       .withMessage("Valid interviewer (volunteer) ID is required"),
     body("interview_time")

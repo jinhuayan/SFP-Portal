@@ -2,6 +2,16 @@ import { validationResult } from "express-validator";
 import Animal from "../models/Animal.js";
 import Volunteer from "../models/Volunteer.js";
 
+// Helper to format volunteer with full_name
+const formatVolunteer = (vol) => {
+  if (!vol) return null;
+  const data = vol.toJSON();
+  return {
+    ...data,
+    full_name: `${data.first_name} ${data.last_name}`,
+  };
+};
+
 export const getAllAnimals = async (req, res, next) => {
   try {
     const userRole = String(req.user?.role || "").toLowerCase();
@@ -17,9 +27,55 @@ export const getAllAnimals = async (req, res, next) => {
 
     const animals = await Animal.findAll({
       where: whereClause,
-      include: [{ model: Volunteer }],
     });
-    res.status(200).json(animals);
+
+    // Attach creator volunteer and interviewer details
+    const enriched = await Promise.all(
+      animals.map(async (animal) => {
+        const plain = animal.toJSON();
+        let volunteer = null;
+        let interviewer = null;
+        try {
+          if (plain.volunteer_id) {
+            volunteer = await Volunteer.findByPk(plain.volunteer_id, {
+              attributes: [
+                "id",
+                "first_name",
+                "last_name",
+                "email",
+                "role",
+                "status",
+              ],
+            });
+          }
+        } catch (e) {
+          console.error("Error fetching volunteer:", e.message);
+        }
+        try {
+          if (plain.interviewer_id) {
+            interviewer = await Volunteer.findByPk(plain.interviewer_id, {
+              attributes: [
+                "id",
+                "first_name",
+                "last_name",
+                "email",
+                "role",
+                "status",
+              ],
+            });
+          }
+        } catch (e) {
+          console.error("Error fetching interviewer:", e.message);
+        }
+        return {
+          ...plain,
+          volunteer: formatVolunteer(volunteer),
+          interviewer: formatVolunteer(interviewer),
+        };
+      })
+    );
+
+    res.status(200).json(enriched);
   } catch (error) {
     next(error);
   }
@@ -29,8 +85,9 @@ export const getAnimalById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const animal = await Animal.findByPk(id, {
-      include: [{ model: Volunteer }],
+    // Lookup by unique_id (string like "SFP-002"), not by numeric PK
+    const animal = await Animal.findOne({
+      where: { unique_id: id },
     });
 
     if (!animal) {
@@ -50,7 +107,46 @@ export const getAnimalById = async (req, res, next) => {
         .json({ message: "You can only view animals you created" });
     }
 
-    res.status(200).json(animal);
+    const plain = animal.toJSON();
+    let volunteer = null;
+    let interviewer = null;
+    try {
+      if (plain.volunteer_id) {
+        volunteer = await Volunteer.findByPk(plain.volunteer_id, {
+          attributes: [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "role",
+            "status",
+          ],
+        });
+      }
+    } catch (e) {
+      console.error("Error fetching volunteer:", e.message);
+    }
+    try {
+      if (plain.interviewer_id) {
+        interviewer = await Volunteer.findByPk(plain.interviewer_id, {
+          attributes: [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "role",
+            "status",
+          ],
+        });
+      }
+    } catch (e) {
+      console.error("Error fetching interviewer:", e.message);
+    }
+    res.status(200).json({
+      ...plain,
+      volunteer: formatVolunteer(volunteer),
+      interviewer: formatVolunteer(interviewer),
+    });
   } catch (error) {
     next(error);
   }
@@ -60,10 +156,31 @@ export const getAvailableAnimals = async (req, res, next) => {
   try {
     const availableAnimals = await Animal.findAll({
       where: { status: "published" },
-      include: [{ model: Volunteer }],
     });
-
-    res.status(200).json(availableAnimals);
+    const enriched = await Promise.all(
+      availableAnimals.map(async (animal) => {
+        const plain = animal.toJSON();
+        let volunteer = null;
+        try {
+          if (plain.volunteer_id) {
+            volunteer = await Volunteer.findByPk(plain.volunteer_id, {
+              attributes: [
+                "id",
+                "first_name",
+                "last_name",
+                "email",
+                "role",
+                "status",
+              ],
+            });
+          }
+        } catch (e) {
+          console.error("Error fetching volunteer:", e.message);
+        }
+        return { ...plain, volunteer: formatVolunteer(volunteer) };
+      })
+    );
+    res.status(200).json(enriched);
   } catch (error) {
     next(error);
   }
@@ -73,10 +190,41 @@ export const getAdoptedAnimals = async (req, res, next) => {
   try {
     const adoptedAnimals = await Animal.findAll({
       where: { status: "adopted" },
-      include: [{ model: Volunteer }],
     });
+    const enriched = await Promise.all(
+      adoptedAnimals.map(async (animal) => {
+        const plain = animal.toJSON();
+        let volunteer = null;
+        try {
+          if (plain.volunteer_id) {
+            volunteer = await Volunteer.findByPk(plain.volunteer_id, {
+              attributes: [
+                "id",
+                "first_name",
+                "last_name",
+                "email",
+                "role",
+                "status",
+              ],
+            });
+          }
+        } catch (e) {
+          console.error("Error fetching volunteer:", e.message);
+        }
+        return { ...plain, volunteer: formatVolunteer(volunteer) };
+      })
+    );
+    res.status(200).json(enriched);
+  } catch (error) {
+    next(error);
+  }
+};
 
-    res.status(200).json(adoptedAnimals);
+// Get total count of all animals (public)
+export const getTotalAnimalsCount = async (req, res, next) => {
+  try {
+    const count = await Animal.count();
+    res.status(200).json({ count });
   } catch (error) {
     next(error);
   }
@@ -141,11 +289,16 @@ export const createAnimal = async (req, res, next) => {
     });
 
     // Include volunteer data in response
-    const animalWithVolunteer = await Animal.findByPk(uniqueId, {
-      include: [{ model: Volunteer }],
+    const animalWithVolunteer = await Animal.findByPk(newAnimal.id);
+    const plain = animalWithVolunteer.toJSON();
+    const volunteerInfo = await Volunteer.findByPk(plain.volunteer_id, {
+      attributes: ["id", "first_name", "last_name", "role", "status"],
     });
-
-    res.status(201).json(animalWithVolunteer);
+    res.status(201).json({
+      ...plain,
+      volunteer: formatVolunteer(volunteerInfo),
+      interviewer: null,
+    });
   } catch (error) {
     next(error);
   }
@@ -185,11 +338,23 @@ export const updateAnimal = async (req, res, next) => {
     await animal.update(updateData);
 
     // Include volunteer data in response
-    const updatedAnimal = await Animal.findByPk(id, {
-      include: [{ model: Volunteer }],
+    const updatedAnimal = await Animal.findByPk(id);
+    const plain = updatedAnimal.toJSON();
+    const volunteerInfo = plain.volunteer_id
+      ? await Volunteer.findByPk(plain.volunteer_id, {
+          attributes: ["id", "first_name", "last_name", "role", "status"],
+        })
+      : null;
+    const interviewerInfo = plain.interviewer_id
+      ? await Volunteer.findByPk(plain.interviewer_id, {
+          attributes: ["id", "first_name", "last_name", "role", "status"],
+        })
+      : null;
+    res.status(200).json({
+      ...plain,
+      volunteer: formatVolunteer(volunteerInfo),
+      interviewer: formatVolunteer(interviewerInfo),
     });
-
-    res.status(200).json(updatedAnimal);
   } catch (error) {
     next(error);
   }
@@ -197,35 +362,98 @@ export const updateAnimal = async (req, res, next) => {
 
 export const updateAnimalState = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // This is unique_id like "SFP-002"
     const { status } = req.body;
 
-    // Find animal in database
-    const animal = await Animal.findByPk(id);
+    // Find animal by unique_id, not by integer id
+    const animal = await Animal.findOne({
+      where: { unique_id: id },
+    });
 
     if (!animal) {
       return res.status(404).json({ message: "Animal not found" });
     }
 
-    // Only admin can change animal status
+    // Check user role
     const userRole = String(req.user?.role || "").toLowerCase();
 
-    if (userRole !== "admin") {
-      return res
-        .status(403)
-        .json({ message: "Only admin can update animal status" });
+    // Valid animal statuses: draft, fostering, ready, published, interviewing, reserved, adopted, archived
+    const validAnimalStatuses = [
+      "draft",
+      "fostering",
+      "ready",
+      "published",
+      "interviewing",
+      "reserved",
+      "adopted",
+      "archived",
+    ];
+
+    // Validate the status is valid
+    if (!validAnimalStatuses.includes(status)) {
+      return res.status(400).json({
+        message: `Invalid status. Must be one of: ${validAnimalStatuses.join(
+          ", "
+        )}`,
+      });
+    }
+
+    // Role-based permission enforcement
+    if (userRole === "interviewer") {
+      // Interviewers can only set status to "interviewing"
+      if (status !== "interviewing") {
+        return res.status(403).json({
+          message: "Interviewers can only set status to 'interviewing'",
+        });
+      }
+    } else if (userRole === "admin") {
+      // Admins can set any status
+    } else {
+      // All other roles are denied
+      return res.status(403).json({
+        message: "Only admin and interviewer can update animal status",
+      });
     }
 
     // Update status in database
     await animal.update({ status });
 
     // Include volunteer data in response
-    const updatedAnimal = await Animal.findByPk(id, {
-      include: [{ model: Volunteer }],
+    const updatedAnimal = await Animal.findOne({
+      where: { unique_id: id },
     });
-
-    res.status(200).json(updatedAnimal);
+    const plain = updatedAnimal.toJSON();
+    const volunteerInfo = plain.volunteer_id
+      ? await Volunteer.findByPk(plain.volunteer_id, {
+          attributes: [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "role",
+            "status",
+          ],
+        })
+      : null;
+    const interviewerInfo = plain.interviewer_id
+      ? await Volunteer.findByPk(plain.interviewer_id, {
+          attributes: [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "role",
+            "status",
+          ],
+        })
+      : null;
+    res.status(200).json({
+      ...plain,
+      volunteer: formatVolunteer(volunteerInfo),
+      interviewer: formatVolunteer(interviewerInfo),
+    });
   } catch (error) {
+    console.error("Error in updateAnimalState:", error.message || error);
     next(error);
   }
 };
@@ -252,6 +480,67 @@ export const deleteAnimal = async (req, res, next) => {
     await animal.destroy();
 
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Assign or update interviewer for an animal (admin only)
+export const assignAnimalInterviewer = async (req, res, next) => {
+  try {
+    const { id } = req.params; // animal primary key (numeric)
+    const { interviewer_id } = req.body;
+
+    if (!interviewer_id) {
+      return res.status(400).json({ message: "interviewer_id is required" });
+    }
+
+    const animal = await Animal.findByPk(id);
+    if (!animal) {
+      return res.status(404).json({ message: "Animal not found" });
+    }
+
+    const userRole = String(req.user?.role || "").toLowerCase();
+    if (userRole !== "admin") {
+      return res
+        .status(403)
+        .json({ message: "Only admin can assign an interviewer" });
+    }
+
+    const interviewer = await Volunteer.findByPk(interviewer_id);
+    if (!interviewer) {
+      return res.status(404).json({ message: "Interviewer not found" });
+    }
+    if (String(interviewer.role).toLowerCase() !== "interviewer") {
+      return res
+        .status(400)
+        .json({ message: "Selected volunteer is not an interviewer" });
+    }
+
+    await animal.update({ interviewer_id: interviewer.id });
+
+    const plain = animal.toJSON();
+    const volunteerInfo = plain.volunteer_id
+      ? await Volunteer.findByPk(plain.volunteer_id, {
+          attributes: [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "role",
+            "status",
+          ],
+        })
+      : null;
+    const interviewerInfo = await Volunteer.findByPk(interviewer.id, {
+      attributes: ["id", "first_name", "last_name", "email", "role", "status"],
+    });
+
+    res.status(200).json({
+      ...plain,
+      volunteer: formatVolunteer(volunteerInfo),
+      interviewer: formatVolunteer(interviewerInfo),
+    });
   } catch (error) {
     next(error);
   }

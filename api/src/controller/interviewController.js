@@ -6,8 +6,8 @@ import Volunteer from "../models/Volunteer.js";
 // Get all interviews (admin only) or assigned interviews (interviewer)
 export const getAllInterviews = async (req, res, next) => {
   try {
-    const userRole = req.user?.role;
-    const userId = req.user?.id;
+    const userRole = String(req.user?.role || "").toLowerCase();
+    const userId = req.user?.sub; // JWT uses 'sub' for user ID
 
     let whereClause = {};
 
@@ -50,8 +50,8 @@ export const getInterviewById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const interviewId = parseInt(id);
-    const userRole = req.user?.role;
-    const userId = req.user?.id;
+    const userRole = String(req.user?.role || "").toLowerCase();
+    const userId = req.user?.sub; // JWT uses 'sub' for user ID
 
     const interview = await Interview.findByPk(interviewId, {
       include: [
@@ -123,7 +123,7 @@ export const getInterviewsByApplication = async (req, res, next) => {
   }
 };
 
-// Create interview (admin only) - requires application_id and volunteer_id (interviewer)
+// Create interview (admin & interviewer) - requires application_id
 export const createInterview = async (req, res, next) => {
   try {
     // Validate request
@@ -133,6 +133,8 @@ export const createInterview = async (req, res, next) => {
     }
 
     const { application_id, volunteer_id, interview_time } = req.body;
+    const userRole = String(req.user?.role || "").toLowerCase();
+    const userId = req.user?.sub; // JWT uses 'sub' for user ID, not 'id'
 
     // Check if application exists
     const application = await Application.findByPk(application_id);
@@ -140,19 +142,34 @@ export const createInterview = async (req, res, next) => {
       return res.status(404).json({ message: "Application not found" });
     }
 
+    // Determine the volunteer_id to use
+    let assignedVolunteerId = volunteer_id;
+
+    // If volunteer_id not provided, use current user's ID (for interviewers)
+    if (!assignedVolunteerId) {
+      if (userRole === "interviewer") {
+        assignedVolunteerId = userId;
+      } else if (userRole === "admin") {
+        return res.status(400).json({
+          message: "Admin must provide volunteer_id to assign an interviewer",
+        });
+      }
+    }
+
     // Check if volunteer (interviewer) exists
-    const volunteer = await Volunteer.findByPk(volunteer_id);
+    const volunteer = await Volunteer.findByPk(assignedVolunteerId);
     if (!volunteer) {
+      console.error(
+        `Volunteer not found - ID: ${assignedVolunteerId}, Role: ${userRole}, userId from token: ${userId}`
+      );
       return res.status(404).json({ message: "Interviewer not found" });
     }
 
     // Ensure selected volunteer has interviewer role
     if (volunteer.role !== "interviewer" && volunteer.role !== "admin") {
-      return res
-        .status(400)
-        .json({
-          message: "Selected volunteer must have interviewer or admin role",
-        });
+      return res.status(400).json({
+        message: "Selected volunteer must have interviewer or admin role",
+      });
     }
 
     // Get volunteer name
@@ -161,7 +178,7 @@ export const createInterview = async (req, res, next) => {
     // Create new interview
     const newInterview = await Interview.create({
       application_id,
-      volunteer_id,
+      volunteer_id: assignedVolunteerId,
       volunteer_name: volunteerName,
       interview_time: interview_time || null,
       interview_result: null,
@@ -200,8 +217,8 @@ export const updateInterview = async (req, res, next) => {
   try {
     const { id } = req.params;
     const interviewId = parseInt(id);
-    const userRole = req.user?.role;
-    const userId = req.user?.id;
+    const userRole = String(req.user?.role || "").toLowerCase();
+    const userId = req.user?.sub; // JWT uses 'sub' for user ID
 
     const { interview_time, interview_result, final_decision } = req.body;
 
@@ -224,11 +241,9 @@ export const updateInterview = async (req, res, next) => {
     // Interview time logic: can only be set once
     if (interview_time !== undefined) {
       if (interview.interview_time) {
-        return res
-          .status(400)
-          .json({
-            message: "Interview time already set and cannot be updated",
-          });
+        return res.status(400).json({
+          message: "Interview time already set and cannot be updated",
+        });
       }
       updates.interview_time = interview_time;
     }
