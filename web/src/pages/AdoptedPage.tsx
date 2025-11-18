@@ -11,6 +11,7 @@ export default function AdoptedPage() {
     async function fetchAdoptedAnimals() {
       try {
         const res = await fetch(`${API_BASE_URL}/api/animals/adopted`);
+        console.log(res);
         if (!res.ok) throw new Error('Failed to fetch adopted animals');
         const data = await res.json();
         setAnimals(data);

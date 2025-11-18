@@ -106,9 +106,9 @@ export default function ApplicationManagement() {
   
   const handleStatusChange = (applicationId: string, newStatus: string) => {
     toast.success(`Application status updated to ${newStatus}`);
-    
-    // If changing to Approved, simulate creating an adopter account
-    if (newStatus === 'Approved') {
+
+    // If changing to approved, simulate creating an adopter account
+    if (newStatus === 'approved') {
       const app = mockApplications.find(a => a.id === applicationId);
       if (app) {
         toast.info(`Adopter account created for ${app.applicantName}. Temporary password has been sent.`);

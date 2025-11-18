@@ -232,6 +232,7 @@ export default function ApplyPage() {
         },
         body: JSON.stringify(payload),
       });
+      console.log(response);
       if (!response.ok) throw new Error('Failed to submit application');
       await response.json();
       toast.success(`Your application to adopt ${animal.name} (${animal.uniqueId}) has been submitted successfully!`);
