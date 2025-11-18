@@ -812,3 +812,393 @@ This is an automated email. Please do not reply to this email.
     return { success: false, message: error.message };
   }
 };
+
+/**
+ * Send contract signing link email to approved adopter
+ */
+export const sendContractEmail = async (contractData) => {
+  if (!process.env.SENDGRID_API_KEY) {
+    console.log('📧 Email not sent (SendGrid not configured):', contractData.adopter_email);
+    return { success: false, message: 'SendGrid not configured' };
+  }
+
+  const {
+    adopter_email,
+    adopter_name,
+    animal_name,
+    animal_id,
+    contract_link,
+    expires_in_hours = 48,
+  } = contractData;
+
+  const msg = {
+    to: adopter_email,
+    from: process.env.SENDGRID_FROM_EMAIL || 'noreply@sfp-portal.com',
+    subject: `🎉 Congratulations! Contract Ready for ${animal_name}`,
+    text: `
+Dear ${adopter_name},
+
+Congratulations! Your application to adopt ${animal_name} (ID: ${animal_id}) has been approved! 🎉
+
+${animal_name} is now RESERVED for you while you complete the final step: signing your adoption contract.
+
+📝 Sign Your Contract:
+${contract_link}
+
+⚠️ IMPORTANT: This link will expire in ${expires_in_hours} hours.
+
+What You'll Need to Do:
+-----------------------
+1. Review the terms and conditions
+2. Upload payment proof (EMT screenshot for adoption fee)
+3. Provide your electronic signature
+4. Submit the contract
+
+Once you submit the contract, ${animal_name} will officially be adopted and we'll arrange the final details for them to come home with you!
+
+If you have any questions or need assistance, please don't hesitate to contact us.
+
+Thank you for choosing to adopt and giving ${animal_name} a loving forever home! ❤️
+
+Best regards,
+The SFP Portal Team
+
+---
+This is an automated email. Please do not reply to this email.
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contract Ready</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: bold;">
+                🎉 Congratulations!
+              </h1>
+              <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 18px;">
+                Your Application Has Been Approved!
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                Dear <strong>${adopter_name}</strong>,
+              </p>
+              
+              <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                We're thrilled to inform you that your application to adopt <strong>${animal_name}</strong> (ID: ${animal_id}) has been <strong style="color: #10b981;">APPROVED</strong>! 🎊
+              </p>
+              
+              <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                <strong>${animal_name} is now RESERVED for you</strong> while you complete the final step: signing your adoption contract.
+              </p>
+              
+              <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-left: 4px solid #10b981; padding: 20px; margin: 30px 0; border-radius: 8px;">
+                <h3 style="margin: 0 0 15px 0; color: #059669; font-size: 20px;">
+                  📝 Final Step: Sign Your Contract
+                </h3>
+                <p style="margin: 0 0 20px 0; color: #065f46; font-size: 15px; line-height: 1.6;">
+                  Once you complete and submit your adoption contract, ${animal_name} will officially be adopted and ready to come home with you! Click the button below to get started:
+                </p>
+                <div style="text-align: center; margin: 25px 0;">
+                  <a href="${contract_link}" style="display: inline-block; padding: 15px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    Sign Contract Now
+                  </a>
+                </div>
+                <p style="margin: 20px 0 0 0; color: #dc2626; font-size: 14px; text-align: center;">
+                  ⚠️ This link expires in <strong>${expires_in_hours} hours</strong>
+                </p>
+              </div>
+              
+              <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 30px 0; border-radius: 8px;">
+                <h3 style="margin: 0 0 15px 0; color: #92400e; font-size: 18px;">
+                  What You'll Need:
+                </h3>
+                <ul style="margin: 0; padding-left: 20px; color: #78350f; line-height: 2;">
+                  <li>Review terms and conditions</li>
+                  <li>Upload payment proof (EMT screenshot)</li>
+                  <li>Provide your electronic signature</li>
+                  <li>Submit the contract</li>
+                </ul>
+              </div>
+              
+              <p style="margin: 30px 0 0 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                Once you submit the contract, we'll review your payment and contact you to arrange the final details for ${animal_name} to come home with you!
+              </p>
+              
+              <p style="margin: 20px 0 0 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                If you have any questions or need assistance, please don't hesitate to contact us.
+              </p>
+              
+              <p style="margin: 30px 0 0 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                Thank you for choosing to adopt and giving <strong>${animal_name}</strong> a loving forever home! ❤️
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px; background-color: #f8f9fa; text-align: center; border-top: 1px solid #e0e0e0;">
+              <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
+                <strong>The SFP Portal Team</strong>
+              </p>
+              <p style="margin: 0; color: #999999; font-size: 12px;">
+                This is an automated email. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `.trim(),
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`✅ Contract email sent to ${adopter_email} for ${animal_name}`);
+    return { success: true, message: 'Email sent successfully' };
+  } catch (error) {
+    console.error('❌ Error sending contract email:', error);
+    if (error.response) {
+      console.error('SendGrid error response:', error.response.body);
+    }
+    return { success: false, message: error.message };
+  }
+};
+
+/**
+ * Send contract completion confirmation email to adopter
+ */
+export const sendContractCompletionEmail = async (contractData) => {
+  if (!process.env.SENDGRID_API_KEY) {
+    console.log('📧 Email not sent (SendGrid not configured):', contractData.adopter_email);
+    return { success: false, message: 'SendGrid not configured' };
+  }
+
+  const {
+    adopter_email,
+    adopter_name,
+    animal_name,
+    animal_id,
+    adoption_fee,
+  } = contractData;
+
+  const msg = {
+    to: adopter_email,
+    from: process.env.SENDGRID_FROM_EMAIL || 'noreply@sfp-portal.com',
+    subject: `🎉 Adoption Contract Completed - Welcome ${animal_name} to Your Family!`,
+    text: `
+Dear ${adopter_name},
+
+Congratulations! Your adoption contract for ${animal_name} (ID: ${animal_id}) has been successfully completed! 🎉
+
+Thank you for completing all the necessary paperwork. ${animal_name} is officially part of your family now!
+
+Contract Details:
+-----------------
+Animal: ${animal_name} (${animal_id})
+Adoption Fee: $${adoption_fee}
+Completion Date: ${new Date().toLocaleDateString()}
+
+What's Next:
+------------
+1. You'll receive a welcome packet with ${animal_name}'s medical records
+2. Our team will contact you to arrange the pickup/delivery
+3. We recommend scheduling a vet visit within the first week
+4. Join our adopter community group for ongoing support
+
+Important Reminders:
+-------------------
+• Keep ${animal_name}'s medical records up to date
+• Ensure ${animal_name} has proper identification (collar with tags/microchip)
+• Maintain a safe and loving environment
+• Contact us anytime if you have questions or concerns
+
+We're so excited for this new chapter in ${animal_name}'s life! Thank you for opening your heart and home to a rescue animal.
+
+If you have any questions, please don't hesitate to reach out to us.
+
+Congratulations again, and welcome to the SFP family! ❤️
+
+Best regards,
+The SFP Portal Team
+
+---
+This is an automated email. Please do not reply to this email.
+    `.trim(),
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contract Completed - Welcome ${animal_name}!</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 0;">
+        <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 30px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); text-align: center;">
+              <h1 style="margin: 0 0 10px 0; color: #ffffff; font-size: 32px; font-weight: bold;">
+                🎉 Congratulations! 🎉
+              </h1>
+              <p style="margin: 0; color: #ffffff; font-size: 18px;">
+                Your adoption is complete!
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                Dear <strong>${adopter_name}</strong>,
+              </p>
+              
+              <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                We're thrilled to confirm that your adoption contract for <strong>${animal_name}</strong> (ID: ${animal_id}) has been successfully completed! 🐾
+              </p>
+              
+              <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 12px; padding: 25px; margin: 25px 0; text-align: center;">
+                <p style="margin: 0 0 10px 0; color: #166534; font-size: 24px; font-weight: bold;">
+                  Welcome ${animal_name} Home! ❤️
+                </p>
+                <p style="margin: 0; color: #15803d; font-size: 16px;">
+                  ${animal_name} is officially part of your family now!
+                </p>
+              </div>
+              
+              <!-- Contract Details Card -->
+              <div style="background-color: #f8f9fa; border-left: 4px solid #10b981; padding: 25px; margin: 25px 0;">
+                <h2 style="margin: 0 0 20px 0; color: #10b981; font-size: 20px;">
+                  Contract Details
+                </h2>
+                
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; color: #666666; font-size: 14px; width: 150px;">
+                      <strong>Animal:</strong>
+                    </td>
+                    <td style="padding: 8px 0; color: #333333; font-size: 14px;">
+                      ${animal_name} (${animal_id})
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #666666; font-size: 14px;">
+                      <strong>Adoption Fee:</strong>
+                    </td>
+                    <td style="padding: 8px 0; color: #333333; font-size: 14px;">
+                      $${adoption_fee}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #666666; font-size: 14px;">
+                      <strong>Completion Date:</strong>
+                    </td>
+                    <td style="padding: 8px 0; color: #333333; font-size: 14px;">
+                      ${new Date().toLocaleDateString()}
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              
+              <h2 style="margin: 30px 0 20px 0; color: #4C51A4; font-size: 20px;">
+                What's Next?
+              </h2>
+              
+              <ol style="margin: 0 0 20px 0; padding-left: 20px; color: #333333; font-size: 16px; line-height: 1.8;">
+                <li style="margin-bottom: 10px;">
+                  You'll receive a welcome packet with ${animal_name}'s medical records
+                </li>
+                <li style="margin-bottom: 10px;">
+                  Our team will contact you to arrange the pickup/delivery
+                </li>
+                <li style="margin-bottom: 10px;">
+                  We recommend scheduling a vet visit within the first week
+                </li>
+                <li style="margin-bottom: 10px;">
+                  Join our adopter community group for ongoing support
+                </li>
+              </ol>
+              
+              <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0; color: #92400e; font-size: 16px; font-weight: bold;">
+                  📝 Important Reminders
+                </p>
+                <ul style="margin: 0; padding-left: 20px; color: #78350f; font-size: 14px; line-height: 1.6;">
+                  <li style="margin-bottom: 8px;">
+                    Keep ${animal_name}'s medical records up to date
+                  </li>
+                  <li style="margin-bottom: 8px;">
+                    Ensure ${animal_name} has proper identification (collar with tags/microchip)
+                  </li>
+                  <li style="margin-bottom: 8px;">
+                    Maintain a safe and loving environment
+                  </li>
+                  <li>
+                    Contact us anytime if you have questions or concerns
+                  </li>
+                </ul>
+              </div>
+              
+              <p style="margin: 20px 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                We're so excited for this new chapter in ${animal_name}'s life! Thank you for opening your heart and home to a rescue animal.
+              </p>
+              
+              <p style="margin: 30px 0 0 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                Congratulations again, and welcome to the SFP family! ❤️
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px; background-color: #f8f9fa; text-align: center; border-top: 1px solid #e0e0e0;">
+              <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
+                <strong>The SFP Portal Team</strong>
+              </p>
+              <p style="margin: 0; color: #999999; font-size: 12px;">
+                This is an automated email. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `.trim(),
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`✅ Contract completion email sent to ${adopter_email} for ${animal_name}`);
+    return { success: true, message: 'Email sent successfully' };
+  } catch (error) {
+    console.error('❌ Error sending contract completion email:', error);
+    if (error.response) {
+      console.error('SendGrid error response:', error.response.body);
+    }
+    return { success: false, message: error.message };
+  }
+};

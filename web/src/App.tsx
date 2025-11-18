@@ -14,6 +14,7 @@ import AddAnimal from "@/pages/AddAnimal";
 import ApplicationManagement from "@/pages/ApplicationManagement";
 import UserManagement from "@/pages/UserManagement";
 import SignContractPage from "@/pages/SignContractPage";
+import PublicContractPage from "@/pages/PublicContractPage";
 import ApplicationDetails from "@/pages/ApplicationDetails";
 import ScheduleInterview from "@/pages/ScheduleInterview";
 import { useState, useEffect } from "react";
@@ -97,6 +98,9 @@ export default function App() {
             <Route path="/apply/:id" element={<ApplyPage />} />
             <Route path="/adopted" element={<AdoptedPage />} />
             <Route path="/login" element={<LoginPage />} />
+            
+            {/* Public Contract Signing (Token-based, no auth required) */}
+            <Route path="/contract/sign" element={<PublicContractPage />} />
             <Route
               path="/about"
               element={

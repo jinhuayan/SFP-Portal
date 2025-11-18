@@ -199,9 +199,10 @@ export default function ApplicationDetails() {
       const confirmed = window.confirm(
         `⚠️ WARNING: This application is currently APPROVED.\n\n` +
         `Changing the status from "approved" to "${newStatus}" will:\n` +
-        `- Change the animal status from "adopted" back to "interviewing"\n` +
+        `- Change the animal status from "reserved" back to "interviewing"\n` +
         `- Allow other applications to be processed\n` +
-        `- The contract link sent to the adopter may still be active\n\n` +
+        `- The contract link sent to the adopter may still be active\n` +
+        `- If the contract was already signed, the animal may already be "adopted"\n\n` +
         `Are you sure you want to change the status?`
       );
       
@@ -225,7 +226,7 @@ export default function ApplicationDetails() {
 
         setStatus(newStatus);
         toast.success(
-          `Application status changed to "${newStatus}". ${application.animalName} is now back to "interviewing" status.`
+          `Approval reverted. ${application.animalName} status changed from "reserved" to "interviewing". Contract link may still be active.`
         );
         await fetchApplication();
         return;
@@ -247,11 +248,11 @@ export default function ApplicationDetails() {
         return;
       }
 
-      // Handle Approved status - mark animal as adopted and reject other applications
+      // Handle Approved status - mark animal as reserved and send contract email
       if (newStatus === "approved") {
-        // Update animal status to "adopted"
+        // Update animal status to "reserved" (will become "adopted" after contract is signed)
         await apiPatch(`/api/animals/${application.animalId}/state`, {
-          status: "adopted",
+          status: "reserved",
         });
 
         // Update application status to "approved"
@@ -259,31 +260,10 @@ export default function ApplicationDetails() {
           status: "approved",
         });
 
-        // Fetch all applications for this animal and reject the others
-        try {
-          const allApplications: BackendApplication[] = await apiGet("/api/applications");
-          const otherApplications = allApplications.filter(
-            (app) => app.animal_id === application.animalId && app.id !== application.id
-          );
-
-          // Reject all other applications for this animal
-          for (const otherApp of otherApplications) {
-            if (otherApp.status !== "rejected" && otherApp.status !== "approved") {
-              await apiPatch(`/api/applications/${otherApp.id}/status`, {
-                status: "rejected",
-              });
-            }
-          }
-
-          toast.success(
-            `Application approved! ${application.animalName} has been marked as adopted. ${otherApplications.length} other application(s) rejected.`
-          );
-        } catch (err) {
-          console.error("Failed to reject other applications:", err);
-          toast.success(
-            `Application approved! ${application.animalName} has been marked as adopted.`
-          );
-        }
+        toast.success(
+          `✅ Application approved! ${application.animalName} is now RESERVED. Contract email sent to ${application.email}. Once the contract is signed, the animal will be marked as adopted and other applications will be rejected.`,
+          { duration: 6000 }
+        );
 
         setStatus(newStatus);
         await fetchApplication();
@@ -563,10 +543,11 @@ export default function ApplicationDetails() {
                       <i className="fa-solid fa-info-circle text-amber-600 dark:text-amber-400 text-lg mt-0.5"></i>
                       <div className="flex-1">
                         <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">
-                          Status Change Impact
+                          Approved Application Status
                         </h4>
                         <p className="text-xs text-amber-700 dark:text-amber-400">
-                          If you change this application from "approved", the animal's status will automatically change from "adopted" to "interviewing" to allow for reprocessing.
+                          This application is approved and the animal is <strong>RESERVED</strong>. A contract signing link has been sent to the adopter. 
+                          Once the contract is signed, the animal will automatically be marked as "adopted" and other applications will be rejected.
                         </p>
                       </div>
                     </div>

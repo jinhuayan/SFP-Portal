@@ -6,6 +6,8 @@ import {
   createContract,
   updateContract,
   deleteContract,
+  getContractByToken,
+  submitContractByToken,
 } from "../controller/contractController.js";
 import { authMiddleware, roleMiddleware } from "../middleware/auth.js";
 import { body, param } from "express-validator";
@@ -59,6 +61,23 @@ router.delete(
   roleMiddleware("admin"),
   [param("id").isInt().withMessage("Valid contract ID is required")],
   deleteContract
+);
+
+// Public routes for token-based contract access (no authentication required)
+router.get(
+  "/token/:token",
+  [param("token").notEmpty().withMessage("Token is required")],
+  getContractByToken
+);
+
+router.post(
+  "/token/:token/submit",
+  [
+    param("token").notEmpty().withMessage("Token is required"),
+    body("payment_proof").notEmpty().withMessage("Payment proof is required"),
+    body("signature").notEmpty().withMessage("Signature is required"),
+  ],
+  submitContractByToken
 );
 
 export default router;

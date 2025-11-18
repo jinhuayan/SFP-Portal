@@ -27,13 +27,31 @@ const Contract = sequelize.define(
         key: "unique_id",
       },
     },
+    adoption_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
     payment_proof: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.TEXT,
+      allowNull: true, // Will be filled when contract is signed
     },
     signature: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
+      allowNull: true, // Will be filled when contract is signed
+    },
+    contract_token: {
+      type: DataTypes.STRING(64),
       allowNull: true,
+      unique: true,
+    },
+    token_expires_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    token_used: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
     },
   },
   {

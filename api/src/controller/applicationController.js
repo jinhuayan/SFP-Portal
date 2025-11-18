@@ -2,6 +2,8 @@ import { validationResult } from "express-validator";
 import Application from "../models/Application.js";
 import Animal from "../models/Animal.js";
 import Volunteer from "../models/Volunteer.js";
+import Contract from "../models/Contract.js";
+import crypto from "crypto";
 import { sendApplicationConfirmationEmail, sendNewApplicationNotificationEmail } from "../services/emailService.js";
 
 export const getAllApplications = async (req, res, next) => {
@@ -206,6 +208,72 @@ export const updateApplicationStatus = async (req, res, next) => {
     await application.update({ status });
 
     console.log(`✅ Application #${applicationId} status changed from "${oldStatus}" to "${status}" by ${isAdmin ? 'admin' : 'interviewer'}`);
+
+    // If status changed to "approved", create contract and send email with token
+    if (status === "approved" && oldStatus !== "approved") {
+      try {
+        // Get animal details
+        const animal = await Animal.findOne({ 
+          where: { unique_id: application.animal_id },
+          attributes: ["id", "unique_id", "name", "species", "adoption_fee"]
+        });
+
+        if (animal) {
+          // Generate secure token (48-hour expiry)
+          const token = crypto.randomBytes(32).toString('hex');
+          const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours from now
+
+          // Create or update contract with token
+          const [contract] = await Contract.findOrCreate({
+            where: {
+              application_id: applicationId,
+              animal_id: animal.unique_id,
+            },
+            defaults: {
+              application_id: applicationId,
+              animal_id: animal.unique_id,
+              adoption_fee: animal.adoption_fee,
+              contract_token: token,
+              token_expires_at: expiresAt,
+              token_used: false,
+            },
+          });
+
+          // If contract already existed, update it with new token
+          if (!contract._options.isNewRecord) {
+            await contract.update({
+              contract_token: token,
+              token_expires_at: expiresAt,
+              token_used: false,
+            });
+          }
+
+          // Generate contract signing link
+          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+          const contractLink = `${frontendUrl}/contract/sign?token=${token}`;
+
+          // Send contract email (import from emailService.js)
+          const { sendContractEmail } = await import("../services/emailService.js");
+          await sendContractEmail({
+            adopter_name: application.full_name,
+            adopter_email: application.email,
+            animal_name: animal.name,
+            animal_id: animal.unique_id,
+            contract_link: contractLink,
+            expires_in_hours: 48,
+          });
+
+          console.log(`📧 Contract email sent to ${application.email} with token (expires in 48 hours)`);
+
+          // Update animal status to "reserved" (will change to "adopted" after contract is signed)
+          await animal.update({ status: "reserved" });
+          console.log(`🔒 Animal ${animal.unique_id} status changed to "reserved" (pending contract signature)`);
+        }
+      } catch (error) {
+        console.error('⚠️  Application approved but contract email failed:', error);
+        // Don't fail the request if email fails
+      }
+    }
 
     // Return with details
     const updatedApplication = await Application.findByPk(applicationId, {
