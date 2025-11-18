@@ -484,17 +484,31 @@ export default function ApplicationDetails() {
                   </div>
                   <div className="mt-4 md:mt-0">
                     {canUpdateStatus && application && (
-                      <select
-                        value={status}
-                        onChange={(e) => handleStatusChange(e.target.value)}
-                        className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                      >
-                        <option value="submitted">Submitted</option>
-                        <option value="interview">Interview</option>
-                        <option value="review">Review</option>
-                        {isAdmin && <option value="approved">Approved</option>}
-                        <option value="rejected">Rejected</option>
-                      </select>
+                      <>
+                        {/* Show dropdown only if not finalized OR user is admin */}
+                        {(status !== "approved" && status !== "rejected") || isAdmin ? (
+                          <select
+                            value={status}
+                            onChange={(e) => handleStatusChange(e.target.value)}
+                            disabled={status === "approved" || status === "rejected"}
+                            className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <option value="submitted">Submitted</option>
+                            <option value="interview">Interview</option>
+                            <option value="review">Review</option>
+                            {isAdmin && <option value="approved">Approved</option>}
+                            <option value="rejected">Rejected</option>
+                          </select>
+                        ) : (
+                          /* Show read-only badge for interviewers viewing finalized applications */
+                          <div className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800">
+                            <i className="fa-solid fa-lock text-gray-400 mr-2"></i>
+                            <span className="text-gray-600 dark:text-gray-400 text-sm">
+                              Status Locked
+                            </span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -506,7 +520,7 @@ export default function ApplicationDetails() {
                     <i className="fa-solid fa-envelope mr-2"></i>
                     Contact Applicant
                   </button>
-                  {(isAdmin || roles.includes("interviewer")) && (
+                  {(isAdmin || roles.includes("interviewer")) && status !== "approved" && status !== "rejected" && (
                     <>
                       {status !== "interview" ? (
                         <button
