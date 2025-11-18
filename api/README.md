@@ -74,6 +74,7 @@ docker-compose up -d postgres
 ```
 
 This will create a PostgreSQL database with the following credentials:
+
 - Host: `localhost`
 - Port: `5432`
 - Database: `sfp_portal`
@@ -106,6 +107,7 @@ GRANT ALL PRIVILEGES ON DATABASE sfp_portal TO sfp_user;
 ### 4. Run Database Migrations
 
 The application uses Sequelize ORM with automatic migrations. When you start the server, it will automatically:
+
 - Create all necessary tables
 - Set up relationships
 - Initialize the database schema
@@ -119,6 +121,7 @@ node src/migrations/runMigrations.js
 ```
 
 This will:
+
 - ✅ Create the `volunteers` table
 - ✅ Create the `animals` table
 - ✅ Create the `applications` table
@@ -144,11 +147,13 @@ node src/seeds/seedApplications.js
 **Default Test Accounts** (created by seedVolunteers.js):
 
 1. **Admin Account**
+
    - Email: `admin@sfp.com`
    - Password: `admin123`
    - Roles: `admin`, `foster`, `interviewer`
 
 2. **Foster Account**
+
    - Email: `foster@sfp.com`
    - Password: `foster123`
    - Role: `foster`
@@ -179,6 +184,7 @@ npm start
 The server will start on `http://localhost:5001` (or the PORT specified in your `.env` file).
 
 You should see output like:
+
 ```
 ✅ Database connected successfully
 ✅ Running migrations...
@@ -193,13 +199,14 @@ You should see output like:
 **Error: `ECONNREFUSED` or `Connection refused`**
 
 - Make sure PostgreSQL is running:
+
   ```bash
   # macOS (if installed via Homebrew)
   brew services start postgresql@14
-  
+
   # Linux
   sudo systemctl start postgresql
-  
+
   # Check status
   brew services list  # macOS
   sudo systemctl status postgresql  # Linux
@@ -320,6 +327,7 @@ The API uses role-based access control (RBAC) to restrict access to certain endp
 ### Roles
 
 1. **Admin** (`admin`)
+
    - Full access to all endpoints
    - Can approve/reject applications
    - Can manage all animals, volunteers, and applications
@@ -327,6 +335,7 @@ The API uses role-based access control (RBAC) to restrict access to certain endp
    - Can update animal statuses to any value
 
 2. **Interviewer** (`interviewer`)
+
    - View and manage assigned interviews
    - View applications for animals they're interviewing
    - Move applications to "review" status (reserves animal)
@@ -334,6 +343,7 @@ The API uses role-based access control (RBAC) to restrict access to certain endp
    - Can update animal status to "interviewing" or "reserved"
 
 3. **Foster** (`foster`)
+
    - Manage animals assigned to them
    - Create and update animal profiles
    - Mark animals as "ready for adoption"
@@ -445,6 +455,7 @@ The server logs all requests and errors to the console. In production, consider 
 ### Environment Variables
 
 **Development**:
+
 ```env
 NODE_ENV=development
 PORT=5001
@@ -452,6 +463,7 @@ DB_HOST=localhost
 ```
 
 **Production**:
+
 ```env
 NODE_ENV=production
 PORT=5001

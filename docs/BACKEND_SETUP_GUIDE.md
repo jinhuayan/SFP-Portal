@@ -5,6 +5,7 @@
 ### 1. Comprehensive Backend README (`api/README.md`)
 
 **New Sections Added:**
+
 - ✅ **Quick Start Guide** - Step-by-step setup instructions
 - ✅ **PostgreSQL Setup Options** - Docker vs Manual installation
 - ✅ **Migration Instructions** - How to use `runMigrations.js`
@@ -20,6 +21,7 @@
 ### 2. Quick Start Guide (`QUICKSTART.md`)
 
 A separate quick reference guide for getting started in minutes:
+
 - Fast setup instructions
 - Test account credentials table
 - Common troubleshooting
@@ -31,12 +33,14 @@ A separate quick reference guide for getting started in minutes:
 ### Migration Process
 
 **Before:**
+
 ```bash
 npm run migrate  # Unclear what this does
 npm run seed    # Unclear what this creates
 ```
 
 **After:**
+
 ```bash
 # Clear, explicit commands
 node src/migrations/runMigrations.js  # Creates all tables
@@ -51,6 +55,7 @@ node src/seeds/seedApplications.js    # Creates sample applications
 **New Options:**
 
 1. **Docker (Recommended)**
+
    ```bash
    cd infra
    docker-compose up -d postgres
@@ -63,15 +68,16 @@ node src/seeds/seedApplications.js    # Creates sample applications
 
 ### Test Accounts Documentation
 
-| Role | Email | Password | Capabilities |
-|------|-------|----------|--------------|
-| Admin | admin@sfp.com | admin123 | Full access, approve apps |
-| Foster | foster@sfp.com | foster123 | Manage animals |
-| Interviewer | interviewer@sfp.com | interviewer123 | Manage interviews |
+| Role        | Email               | Password       | Capabilities              |
+| ----------- | ------------------- | -------------- | ------------------------- |
+| Admin       | admin@sfp.com       | admin123       | Full access, approve apps |
+| Foster      | foster@sfp.com      | foster123      | Manage animals            |
+| Interviewer | interviewer@sfp.com | interviewer123 | Manage interviews         |
 
 ## Running the Backend
 
 ### Development Mode
+
 ```bash
 cd api
 pnpm dev
@@ -80,12 +86,14 @@ pnpm dev
 Server starts on: http://localhost:5001
 
 Features:
+
 - ✅ Auto-reload on file changes
 - ✅ Automatic migrations on startup
 - ✅ Detailed console logging
 - ✅ CORS enabled for frontend
 
 ### Production Mode
+
 ```bash
 cd api
 pnpm start
@@ -94,6 +102,7 @@ pnpm start
 ## Troubleshooting Quick Reference
 
 ### Database Connection Failed
+
 ```bash
 # Check PostgreSQL is running
 brew services list  # macOS
@@ -103,12 +112,14 @@ sudo systemctl status postgresql  # Linux
 ```
 
 ### Port Already in Use
+
 ```bash
 # Kill process on port 5001
 lsof -ti:5001 | xargs kill -9
 ```
 
 ### Migration Errors
+
 ```bash
 # Reset database
 psql -U postgres -c "DROP DATABASE sfp_portal;"
@@ -117,6 +128,7 @@ node src/migrations/runMigrations.js
 ```
 
 ### Cannot Login
+
 ```bash
 # Re-seed volunteers
 node src/seeds/seedVolunteers.js
@@ -125,11 +137,13 @@ node src/seeds/seedVolunteers.js
 ## API Testing
 
 ### Health Check
+
 ```bash
 curl http://localhost:5001/api/health
 ```
 
 ### Login Example
+
 ```bash
 curl -X POST http://localhost:5001/api/auth/login \
   -H "Content-Type: application/json" \
@@ -137,6 +151,7 @@ curl -X POST http://localhost:5001/api/auth/login \
 ```
 
 ### Protected Endpoint
+
 ```bash
 curl http://localhost:5001/api/animals \
   -H "Authorization: Bearer <your_jwt_token>"
@@ -188,21 +203,25 @@ SFP-Portal/
 ## What Developers Should Know
 
 ### 1. Migrations Are Automatic
+
 - Migrations run automatically when you start the server
 - No need for manual migration commands in most cases
 - Use `node src/migrations/runMigrations.js` for manual control
 
 ### 2. Seeding Is Optional
+
 - Seeding creates test data for development
 - Not required for production
 - Safe to run multiple times (uses upsert)
 
 ### 3. Environment Variables Matter
+
 - `.env` file must exist in `api/` directory
 - Critical variables: DB credentials, JWT_SECRET, PORT
 - Frontend needs `VITE_API_BASE_URL` to connect
 
 ### 4. Database Reset Process
+
 ```bash
 # Complete reset
 psql -U postgres -c "DROP DATABASE sfp_portal;"
@@ -231,6 +250,6 @@ node src/seeds/seedAnimals.js
 ✅ **API testing examples** using cURL  
 ✅ **Role-based access control** documentation  
 ✅ **Application workflow** visualization  
-✅ **Development tips** and best practices  
+✅ **Development tips** and best practices
 
 The backend is now fully documented and easy to set up for new developers! 🎉

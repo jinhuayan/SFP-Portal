@@ -46,6 +46,7 @@ psql -U postgres -c "CREATE DATABASE sfp_portal;"
 ### 3. Configure Environment
 
 **Backend** (`api/.env`):
+
 ```env
 DB_HOST=localhost
 DB_PORT=5432
@@ -58,6 +59,7 @@ NODE_ENV=development
 ```
 
 **Frontend** (`web/.env`):
+
 ```env
 VITE_API_BASE_URL=http://localhost:5001
 ```
@@ -79,12 +81,14 @@ node src/seeds/seedApplications.js
 ### 5. Start the Application
 
 **Terminal 1 - Backend:**
+
 ```bash
 cd api
 pnpm dev
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 cd web
 pnpm dev
@@ -100,21 +104,24 @@ pnpm dev
 
 After seeding, you can login with:
 
-| Role | Email | Password | Access |
-|------|-------|----------|--------|
-| Admin | `admin@sfp.com` | `admin123` | Full access |
-| Foster | `foster@sfp.com` | `foster123` | Manage animals |
+| Role        | Email                 | Password         | Access            |
+| ----------- | --------------------- | ---------------- | ----------------- |
+| Admin       | `admin@sfp.com`       | `admin123`       | Full access       |
+| Foster      | `foster@sfp.com`      | `foster123`      | Manage animals    |
 | Interviewer | `interviewer@sfp.com` | `interviewer123` | Manage interviews |
 
 ## ✅ Verify Setup
 
 1. **Check Backend**: http://localhost:5001/api/health
+
    - Should return: `{"status": "OK"}`
 
 2. **Check Frontend**: http://localhost:5173
+
    - Should show the home page
 
 3. **Login**: Click "Login" and use admin credentials
+
    - Email: `admin@sfp.com`
    - Password: `admin123`
 
@@ -210,6 +217,7 @@ docker-compose up -d
 ## 📝 Environment Variables Reference
 
 ### Backend (api/.env)
+
 - `DB_HOST` - Database host (default: localhost)
 - `DB_PORT` - Database port (default: 5432)
 - `DB_NAME` - Database name (default: sfp_portal)
@@ -220,6 +228,7 @@ docker-compose up -d
 - `NODE_ENV` - Environment (development/production)
 
 ### Frontend (web/.env)
+
 - `VITE_API_BASE_URL` - Backend API URL (default: http://localhost:5001)
 
 ## 🎉 You're All Set!
@@ -227,6 +236,7 @@ docker-compose up -d
 Your SFP Portal is now running. Check out the documentation for more advanced features and deployment instructions.
 
 **Need Help?**
+
 - [API Documentation](api/README.md)
 - [Frontend Documentation](web/README.md)
 - [Troubleshooting Guide](api/README.md#troubleshooting)

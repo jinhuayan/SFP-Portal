@@ -112,24 +112,30 @@ Step 8: Verify Setup
 ## 🎯 What Each Step Does
 
 ### Step 1: Prerequisites
+
 Check that you have the required software installed.
 
 ### Step 2: Install Dependencies
+
 Downloads all npm packages needed to run the backend.
 
 ### Step 3: Database Setup
+
 Creates a PostgreSQL database named `sfp_portal`.
 
 **Docker Option**: Easiest, runs PostgreSQL in a container.  
 **Manual Option**: Install PostgreSQL on your system.
 
 ### Step 4: Configure Environment
+
 Sets up database connection and server configuration.
 
 ### Step 5: Run Migrations
+
 Creates all database tables and relationships using Sequelize.
 
 **Tables Created**:
+
 - `volunteers` - Stores user accounts (admin, foster, interviewer)
 - `animals` - Stores animal profiles and details
 - `applications` - Stores adoption applications
@@ -137,6 +143,7 @@ Creates all database tables and relationships using Sequelize.
 - `contracts` - Stores signed adoption contracts
 
 ### Step 6: Seed Test Data
+
 Populates database with sample data for testing.
 
 **Test Accounts Created**:
@@ -147,9 +154,11 @@ Populates database with sample data for testing.
 | interviewer@sfp.com | interviewer123 | Interviewer |
 
 ### Step 7: Start the Server
+
 Launches the Express server with hot-reload enabled.
 
 ### Step 8: Verify Setup
+
 Tests that the API is responding correctly.
 
 ## 🔧 Common Setup Issues
@@ -161,6 +170,7 @@ Tests that the API is responding correctly.
 ```
 
 **Solution**:
+
 ```bash
 # Check if PostgreSQL is running
 brew services list | grep postgresql  # macOS
@@ -178,6 +188,7 @@ sudo systemctl start postgresql       # Linux
 ```
 
 **Solution**:
+
 ```bash
 psql -U postgres -c "CREATE DATABASE sfp_portal;"
 ```
@@ -189,6 +200,7 @@ psql -U postgres -c "CREATE DATABASE sfp_portal;"
 ```
 
 **Solution**:
+
 ```bash
 # Kill process on port 5001
 lsof -ti:5001 | xargs kill -9
@@ -204,6 +216,7 @@ PORT=5002
 ```
 
 **Solution**:
+
 ```bash
 # Reset database
 psql -U postgres -d sfp_portal -c "DROP SCHEMA public CASCADE;"
@@ -221,6 +234,7 @@ node src/migrations/runMigrations.js
 ```
 
 **Solution**:
+
 ```bash
 # Add to api/.env
 JWT_SECRET=my_super_secret_key_change_in_production
@@ -279,16 +293,19 @@ JWT_SECRET=my_super_secret_key_change_in_production
 ## 🎓 Learning Resources
 
 ### Understanding Migrations
+
 - `src/migrations/runMigrations.js` - Creates database schema
 - Uses Sequelize `sync()` to create tables from models
 - Idempotent: Safe to run multiple times
 
 ### Understanding Seeds
+
 - `src/seeds/seedVolunteers.js` - Creates test user accounts
 - `src/seeds/seedAnimals.js` - Creates sample animals
 - Uses `upsert()` to avoid duplicates
 
 ### Understanding Models
+
 - `src/models/` - Sequelize model definitions
 - `associations.js` - Defines relationships between tables
 - Models auto-map to PostgreSQL tables
@@ -296,6 +313,7 @@ JWT_SECRET=my_super_secret_key_change_in_production
 ## 🚀 Next Steps After Setup
 
 1. **Test API Endpoints**
+
    ```bash
    # Use the test accounts to login
    curl -X POST http://localhost:5001/api/auth/login \
@@ -304,6 +322,7 @@ JWT_SECRET=my_super_secret_key_change_in_production
    ```
 
 2. **Start Frontend**
+
    ```bash
    cd web
    pnpm install
@@ -312,6 +331,7 @@ JWT_SECRET=my_super_secret_key_change_in_production
    ```
 
 3. **Test Full Workflow**
+
    - Login as admin
    - View animals
    - Create application
