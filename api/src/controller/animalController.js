@@ -1,4 +1,5 @@
 import { validationResult } from "express-validator";
+import { Op } from "sequelize";
 import Animal from "../models/Animal.js";
 import Volunteer from "../models/Volunteer.js";
 
@@ -155,7 +156,11 @@ export const getAnimalById = async (req, res, next) => {
 export const getAvailableAnimals = async (req, res, next) => {
   try {
     const availableAnimals = await Animal.findAll({
-      where: { status: "published" },
+      where: { 
+        status: {
+          [Op.in]: ["published", "interviewing"]
+        }
+      },
     });
     const enriched = await Promise.all(
       availableAnimals.map(async (animal) => {

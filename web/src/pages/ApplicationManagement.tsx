@@ -20,6 +20,16 @@ interface BackendApplication {
   };
 }
 
+interface BackendInterview {
+  id: number;
+  application_id: number;
+  volunteer_id: number;
+  volunteer_name: string;
+  interview_time: string | null;
+  interview_result: string | null;
+  final_decision: string;
+}
+
 interface UiApplication {
   id: number;
   animalId: string;
@@ -29,6 +39,8 @@ interface UiApplication {
   phone: string;
   status: string; // backend raw value
   dateSubmitted: string;
+  interviewTime?: string;
+  interviewerName?: string;
 }
 
 const statusOptions = [
@@ -72,7 +84,7 @@ const statusClass = (status: string) => {
     default:
       return "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-300";
   }
-};
+};   
 
 export default function ApplicationManagement() {
   const { currentUser } = useContext(AuthContext);
@@ -129,13 +141,39 @@ export default function ApplicationManagement() {
       setLoading(true);
       setError(null);
       const data: BackendApplication[] = await apiGet("/api/applications");
-      setApplications(data.map(transform));
+      
+      // Fetch interviews for all applications (admin or interviewer)
+      let interviewsMap: Map<number, BackendInterview> = new Map();
+      if (isAdmin || isInterviewer) {
+        try {
+          const allInterviews: BackendInterview[] = await apiGet("/api/interviews");
+          // Create a map of application_id -> interview
+          allInterviews.forEach(interview => {
+            interviewsMap.set(interview.application_id, interview);
+          });
+        } catch (err) {
+          console.error("Failed to fetch interviews:", err);
+          // Continue without interview data
+        }
+      }
+      
+      // Transform applications and add interview data
+      const transformedApps = data.map(app => {
+        const interview = interviewsMap.get(app.id);
+        return {
+          ...transform(app),
+          interviewTime: interview?.interview_time || undefined,
+          interviewerName: interview?.volunteer_name || undefined,
+        };
+      });
+      
+      setApplications(transformedApps);
     } catch (e: any) {
       setError(e.message || "Failed to load applications");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAdmin, isInterviewer]);
 
   useEffect(() => {
     if (currentUser && (isAdmin || isInterviewer)) {
@@ -182,6 +220,43 @@ export default function ApplicationManagement() {
               <p className="text-gray-600 dark:text-gray-400">
                 Review and manage adoption applications
               </p>
+            </div>
+            <div className="mt-4 md:mt-0">
+              <div className="bg-white dark:bg-gray-800/50 rounded-xl shadow-sm p-4">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3 text-center">
+                  Summary
+                </h3>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-primary">
+                      {applications.length}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Total Apps
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-purple-500">
+                      {applications.filter((app) => app.interviewTime).length}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Interviews
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-yellow-500">
+                      {applications.filter(
+                        (app) =>
+                          app.status === "submitted" ||
+                          app.status === "reviewing"
+                      ).length}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Pending
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -339,9 +414,50 @@ export default function ApplicationManagement() {
                               {/* Status editing removed; change only via ApplicationDetails */}
                             </div>
                           </div>
-                          <div className="mt-3 text-sm text-gray-600 dark:text-gray-400 flex items-center justify-between">
-                            <span>Submitted: {application.dateSubmitted}</span>
-                            {/* interview date/time not yet supported */}
+                          <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                            <div className="flex flex-col gap-2">
+                              <span>Submitted: {application.dateSubmitted}</span>
+                              
+                              {/* Interview Details Section */}
+                              {application.interviewTime && (
+                                <div className="mt-2 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                                  <div className="flex items-start gap-2">
+                                    <i className="fa-solid fa-calendar-check text-purple-600 dark:text-purple-400 mt-0.5"></i>
+                                    <div className="flex-1">
+                                      <div className="font-medium text-purple-900 dark:text-purple-300 text-sm mb-1">
+                                        Interview Scheduled
+                                      </div>
+                                      <div className="space-y-1">
+                                        <div className="flex items-center gap-2 text-sm">
+                                          <i className="fa-solid fa-clock text-purple-500 dark:text-purple-400 text-xs"></i>
+                                          <span className="text-gray-700 dark:text-gray-300">
+                                            {new Date(application.interviewTime).toLocaleDateString('en-US', {
+                                              weekday: 'short',
+                                              year: 'numeric',
+                                              month: 'short',
+                                              day: 'numeric',
+                                            })}{" "}
+                                            at{" "}
+                                            {new Date(application.interviewTime).toLocaleTimeString('en-US', {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}
+                                          </span>
+                                        </div>
+                                        {application.interviewerName && (
+                                          <div className="flex items-center gap-2 text-sm">
+                                            <i className="fa-solid fa-user-tie text-purple-500 dark:text-purple-400 text-xs"></i>
+                                            <span className="text-gray-700 dark:text-gray-300">
+                                              {application.interviewerName}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                           <div className="mt-3 flex justify-end space-x-2">
                             <Link
@@ -363,8 +479,8 @@ export default function ApplicationManagement() {
           )}
         </motion.div>
 
-        {/* Notes Section */}
-        {(isAdmin || isInterviewer) && !loading && !error && (
+        {/* Summary Section */}
+        {(isAdmin || isInterviewer) && !loading && !error && filteredApplications.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -372,49 +488,47 @@ export default function ApplicationManagement() {
             className="mt-8 bg-white dark:bg-gray-900 rounded-xl shadow-md p-6"
           >
             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-              Recent Activity
+              Summary
             </h2>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#4C51A4] flex items-center justify-center text-white">
-                    <i className="fa-solid fa-user"></i>
-                  </div>
-                  <div className="ml-3 flex-1">
-                    <div className="flex justify-between">
-                      <h3 className="font-medium text-gray-800 dark:text-white">
-                        Interviewer User
-                      </h3>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        30 minutes ago
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                      Scheduled an interview with Sarah Johnson for Max
-                      (SFP-123) on November 18, 2025 at 10:00 AM.
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Applications</p>
+                    <p className="text-2xl font-bold text-gray-800 dark:text-white mt-1">
+                      {filteredApplications.length}
                     </p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                    <i className="fa-solid fa-file-lines text-blue-600 dark:text-blue-400 text-xl"></i>
                   </div>
                 </div>
               </div>
-
+              
               <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white">
-                    <i className="fa-solid fa-check"></i>
-                  </div>
-                  <div className="ml-3 flex-1">
-                    <div className="flex justify-between">
-                      <h3 className="font-medium text-gray-800 dark:text-white">
-                        System
-                      </h3>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        Yesterday
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                      New application received from Michael Chen for Luna
-                      (SFP-124).
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Interviews Scheduled</p>
+                    <p className="text-2xl font-bold text-gray-800 dark:text-white mt-1">
+                      {filteredApplications.filter(app => app.interviewTime).length}
                     </p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                    <i className="fa-solid fa-calendar-check text-purple-600 dark:text-purple-400 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Pending Review</p>
+                    <p className="text-2xl font-bold text-gray-800 dark:text-white mt-1">
+                      {filteredApplications.filter(app => app.status === 'submitted').length}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                    <i className="fa-solid fa-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
                   </div>
                 </div>
               </div>

@@ -2,6 +2,8 @@ import { validationResult } from "express-validator";
 import Interview from "../models/Interview.js";
 import Application from "../models/Application.js";
 import Volunteer from "../models/Volunteer.js";
+import Animal from "../models/Animal.js";
+import { sendInterviewScheduledEmail, sendInterviewUpdatedEmail } from "../services/emailService.js";
 
 // Get all interviews (admin only) or assigned interviews (interviewer)
 export const getAllInterviews = async (req, res, next) => {
@@ -124,6 +126,7 @@ export const getInterviewsByApplication = async (req, res, next) => {
 };
 
 // Create interview (admin & interviewer) - requires application_id
+// If interview already exists for this application, update it instead
 export const createInterview = async (req, res, next) => {
   try {
     // Validate request
@@ -141,6 +144,11 @@ export const createInterview = async (req, res, next) => {
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
+
+    // Check if interview already exists for this application
+    const existingInterview = await Interview.findOne({
+      where: { application_id }
+    });
 
     // Determine the volunteer_id to use
     let assignedVolunteerId = volunteer_id;
@@ -175,18 +183,33 @@ export const createInterview = async (req, res, next) => {
     // Get volunteer name
     const volunteerName = `${volunteer.first_name} ${volunteer.last_name}`;
 
-    // Create new interview
-    const newInterview = await Interview.create({
-      application_id,
-      volunteer_id: assignedVolunteerId,
-      volunteer_name: volunteerName,
-      interview_time: interview_time || null,
-      interview_result: null,
-      final_decision: "pending",
-    });
+    let interview;
+    let isUpdate = false;
+
+    if (existingInterview) {
+      // Update existing interview
+      isUpdate = true;
+      await existingInterview.update({
+        volunteer_id: assignedVolunteerId,
+        volunteer_name: volunteerName,
+        interview_time: interview_time || existingInterview.interview_time,
+        // Keep existing interview_result and final_decision
+      });
+      interview = existingInterview;
+    } else {
+      // Create new interview
+      interview = await Interview.create({
+        application_id,
+        volunteer_id: assignedVolunteerId,
+        volunteer_name: volunteerName,
+        interview_time: interview_time || null,
+        interview_result: null,
+        final_decision: "pending",
+      });
+    }
 
     // Return with details
-    const interviewWithDetails = await Interview.findByPk(newInterview.id, {
+    const interviewWithDetails = await Interview.findByPk(interview.id, {
       include: [
         {
           model: Application,
@@ -206,7 +229,50 @@ export const createInterview = async (req, res, next) => {
       ],
     });
 
-    res.status(201).json(interviewWithDetails);
+    // Send email notification if interview time is set
+    if (interview_time && application) {
+      try {
+        // Get animal details
+        const animal = await Animal.findOne({
+          where: { unique_id: application.animal_id },
+        });
+
+        if (animal) {
+          // Format interview time
+          const interviewDate = new Date(interview_time);
+          const formattedTime = interviewDate.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          });
+
+          const emailData = {
+            applicant_email: application.email,
+            applicant_name: application.full_name,
+            animal_name: animal.name,
+            animal_id: animal.unique_id,
+            interview_date: interviewDate.toISOString().split('T')[0],
+            interview_time: formattedTime,
+            interview_location: req.body.interview_location || 'SFP Office',
+            interview_notes: req.body.interview_notes || '',
+            interviewer_name: volunteerName,
+            interviewer_email: volunteer.email,
+          };
+
+          // Send scheduled or updated email based on whether this was an update
+          if (isUpdate) {
+            await sendInterviewUpdatedEmail(emailData);
+          } else {
+            await sendInterviewScheduledEmail(emailData);
+          }
+        }
+      } catch (emailError) {
+        console.error('Failed to send interview email:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
+
+    res.status(isUpdate ? 200 : 201).json(interviewWithDetails);
   } catch (error) {
     next(error);
   }
@@ -238,13 +304,8 @@ export const updateInterview = async (req, res, next) => {
 
     const updates = {};
 
-    // Interview time logic: can only be set once
+    // Interview time: can be set and updated
     if (interview_time !== undefined) {
-      if (interview.interview_time) {
-        return res.status(400).json({
-          message: "Interview time already set and cannot be updated",
-        });
-      }
       updates.interview_time = interview_time;
     }
 
@@ -291,6 +352,55 @@ export const updateInterview = async (req, res, next) => {
         },
       ],
     });
+
+    // Send email notification if interview time was just set or changed
+    if (interview_time && updatedInterview.Application) {
+      try {
+        const application = updatedInterview.Application;
+        
+        // Get animal details
+        const animal = await Animal.findOne({
+          where: { unique_id: application.animal_id },
+        });
+
+        // Get volunteer details
+        const volunteer = updatedInterview.Volunteer;
+
+        if (animal && volunteer) {
+          // Format interview time
+          const interviewDate = new Date(interview_time);
+          const formattedTime = interviewDate.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          });
+
+          const emailData = {
+            applicant_email: application.email,
+            applicant_name: application.full_name,
+            animal_name: animal.name,
+            animal_id: animal.unique_id,
+            interview_date: interviewDate.toISOString().split('T')[0],
+            interview_time: formattedTime,
+            interview_location: req.body.interview_location || 'SFP Office',
+            interview_notes: req.body.interview_notes || '',
+            interviewer_name: `${volunteer.first_name} ${volunteer.last_name}`,
+            interviewer_email: volunteer.email,
+          };
+
+          // If this was the first time setting the interview_time, send "scheduled" email
+          // Otherwise, send "updated" email
+          if (!interview.interview_time) {
+            await sendInterviewScheduledEmail(emailData);
+          } else {
+            await sendInterviewUpdatedEmail(emailData);
+          }
+        }
+      } catch (emailError) {
+        console.error('Failed to send interview email:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
 
     res.status(200).json(updatedInterview);
   } catch (error) {

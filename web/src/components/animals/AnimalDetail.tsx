@@ -453,7 +453,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ animal: propAnimal }) => {
         )}
 
         {/* Actions */}
-        {animal.status === "published" && (
+        {(animal.status === "published" || animal.status === "interviewing") && (
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={handleApply}

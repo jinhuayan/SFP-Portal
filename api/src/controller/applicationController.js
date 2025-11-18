@@ -1,7 +1,8 @@
 import { validationResult } from "express-validator";
 import Application from "../models/Application.js";
 import Animal from "../models/Animal.js";
-import { sendApplicationConfirmationEmail, sendApplicationStatusUpdateEmail } from "../services/emailService.js";
+import Volunteer from "../models/Volunteer.js";
+import { sendApplicationConfirmationEmail, sendNewApplicationNotificationEmail } from "../services/emailService.js";
 
 export const getAllApplications = async (req, res, next) => {
   try {
@@ -112,6 +113,40 @@ export const createApplication = async (req, res, next) => {
       // Don't fail the request if email fails
     });
 
+    // Send notification emails to admin and interviewers (non-blocking)
+    try {
+      const recipients = await Volunteer.findAll({
+        where: {
+          role: ['admin', 'interviewer'],
+          status: 'active'
+        },
+        attributes: ['id', 'first_name', 'last_name', 'email']
+      });
+
+      if (recipients.length > 0) {
+        const recipientList = recipients.map(r => ({
+          name: `${r.first_name} ${r.last_name}`,
+          email: r.email
+        }));
+
+        sendNewApplicationNotificationEmail({
+          applicant_name: applicationData.full_name,
+          applicant_email: applicationData.email,
+          animal_id: animal_id,
+          animal_name: animal.name,
+          application_id: newApplication.id,
+          phone_number: applicationData.phone_number,
+          address: applicationData.address,
+        }, recipientList).catch(err => {
+          console.error('Failed to send notification emails:', err);
+          // Don't fail the request if email fails
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch recipients for notification emails:', err);
+      // Don't fail the request if email fails
+    }
+
     res.status(201).json(applicationWithDetails);
   } catch (error) {
     next(error);
@@ -131,8 +166,6 @@ export const updateApplicationStatus = async (req, res, next) => {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    const oldStatus = application.status;
-
     // Update status
     await application.update({ status });
 
@@ -145,21 +178,6 @@ export const updateApplicationStatus = async (req, res, next) => {
         },
       ],
     });
-
-    // Send status update email if status changed (non-blocking)
-    if (oldStatus !== status) {
-      const animal = updatedApplication.Animal;
-      sendApplicationStatusUpdateEmail({
-        email: application.email,
-        full_name: application.full_name,
-        animal_id: application.animal_id,
-        animal_name: animal?.name || 'Animal',
-        application_id: application.id,
-      }, status).catch(err => {
-        console.error('Failed to send status update email:', err);
-        // Don't fail the request if email fails
-      });
-    }
 
     res.status(200).json(updatedApplication);
   } catch (error) {
