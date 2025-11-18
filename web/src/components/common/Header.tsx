@@ -15,14 +15,13 @@ export default function Header() {
   };
 
   const isAdmin = isUserObject(currentUser) && currentUser.role.includes('admin');
-  const isFoster = isUserObject(currentUser) && currentUser.role.includes('foster') && !currentUser.role.includes('super foster');
-  const isSuperFoster = isUserObject(currentUser) && currentUser.role.includes('super foster');
+  const isFoster = isUserObject(currentUser) && currentUser.role.includes('foster');
   const isInterviewer = isUserObject(currentUser) && currentUser.role.includes('interviewer');
   const isAuthenticated = isUserObject(currentUser) && currentUser.isAuthenticated;
   const userName = isUserObject(currentUser) ? currentUser.name : 'User';
 
-  // Determine if user is internal staff
-  const isInternalStaff = isAdmin || isFoster || isSuperFoster || isInterviewer;
+  // Determine if user is internal staff (admin, interviewer, or foster)
+  const isInternalStaff = isAdmin || isFoster || isInterviewer;
 
   // Profile dropdown state + ref to handle outside clicks / Escape
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -78,25 +77,15 @@ export default function Header() {
               
               {/* Role-specific Navigation */}
               {isInterviewer || isAdmin ? (
-                <>
-                  <Link 
-                    to="/applications/manage" 
-                    className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
-                  >
-                    Manage Applications
-                  </Link>
-                  {isAdmin && (
-                    <Link 
-                      to="/interviewers/assign" 
-                      className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
-                    >
-                      Assign Interviewers
-                    </Link>
-                  )}
-                </>
+                <Link 
+                  to="/applications/manage" 
+                  className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
+                >
+                  Manage Applications
+                </Link>
               ) : null}
               
-              {(isFoster || isSuperFoster || isAdmin) && (
+              {(isFoster || isAdmin) && (
                 <Link 
                   to="/animals/manage" 
                   className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
@@ -105,14 +94,14 @@ export default function Header() {
                 </Link>
               )}
               
-                {isAdmin && (
-                 <Link 
-                   to="/users/manage" 
-                   className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
-                 >
-                   Manage Users
-                 </Link>
-               )}
+              {isAdmin && (
+                <Link 
+                  to="/users/manage" 
+                  className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
+                >
+                  Manage Users
+                </Link>
+              )}
               
               {/* User profile and logout */}
               <div ref={profileRef} className="relative">
@@ -308,55 +297,28 @@ export default function Header() {
                       >
                         <i className="fa-solid fa-file-alt mr-2"></i>Manage Applications
                       </Link>
-                      {isAdmin && (
-                        <Link 
-                          to="#" 
-                          className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <i className="fa-solid fa-users-slash mr-2"></i>Assign Interviewers
-                        </Link>
-                      )}
                     </>
                   ) : null}
                   
-                  {(isFoster || isSuperFoster || isAdmin) && (
-                  <Link 
-                    to="/animals/manage" 
-                    className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <i className="fa-solid fa-pets mr-2"></i>Manage Animals
-                  </Link>
+                  {(isFoster || isAdmin) && (
+                    <Link 
+                      to="/animals/manage" 
+                      className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <i className="fa-solid fa-pets mr-2"></i>Manage Animals
+                    </Link>
                   )}
                   
-                {isAdmin && (
-                 <Link 
-                   to="/users/manage" 
-                   className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
-                   onClick={() => setIsMenuOpen(false)}
-                 >
-                   <i className="fa-solid fa-users-cog mr-2"></i>Manage Users
-                 </Link>
-               )}
-               {isAdmin && (
-                 <Link 
-                   to="/interviewers/assign" 
-                   className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
-                   onClick={() => setIsMenuOpen(false)}
-                 >
-                   <i className="fa-solid fa-user-tie mr-2"></i>Assign Interviewers
-                 </Link>
-               )}
-              {isAdmin && (
-                <Link 
-                  to="/interviewers/assign" 
-                  className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <i className="fa-solid fa-user-tie mr-2"></i>Assign Interviewers
-                </Link>
-              )}
+                  {isAdmin && (
+                    <Link 
+                      to="/users/manage" 
+                      className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <i className="fa-solid fa-users-cog mr-2"></i>Manage Users
+                    </Link>
+                  )}
                   
                   <Link 
                     to="/profile" 
