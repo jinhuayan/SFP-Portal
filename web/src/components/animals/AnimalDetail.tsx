@@ -1,15 +1,68 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Animal, calculateDaysInSFP } from '@/data/mockAnimals';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { calculateDaysInSFP } from '@/data/mockAnimals';
 import { toast } from 'sonner';
 
 interface AnimalDetailProps {
-  animal: Animal;
+  animal?: any; // Accepts normalized backend animal
 }
 
-const AnimalDetail: React.FC<AnimalDetailProps> = ({ animal }) => {
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const AnimalDetail: React.FC<AnimalDetailProps> = ({ animal: propAnimal }) => {
+  const { id } = useParams();
+  const [animal, setAnimal] = useState<any | null>(propAnimal || null);
+  const [loading, setLoading] = useState(!propAnimal);
+  const [error, setError] = useState('');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!animal && id) {
+      setLoading(true);
+      setError('');
+      fetch(`${API_BASE_URL}/api/animals/${id}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch animal');
+          return res.json();
+        })
+        .then(data => {
+          setAnimal({
+            id: data.id,
+            uniqueId: data.unique_id || data.uniqueId,
+            name: data.name,
+            species: data.species,
+            breed: data.breed,
+            age: data.age,
+            sex: data.sex,
+            size: data.size,
+            color: data.color,
+            description: data.description,
+            personality: Array.isArray(data.personality) ? data.personality : [],
+            imageUrls: data.image_urls || data.imageUrls || [],
+            adoptionFee: data.adoption_fee || data.adoptionFee,
+            intakeDate: data.intake_date || data.intakeDate,
+            postedDate: data.posted_date || data.postedDate,
+            status: data.status,
+            adoptionDate: data.adoption_date || data.adoptionDate,
+            adoptionStory: data.adoption_story || data.adoptionStory,
+            goodWith: {
+              children: data.good_with_children ?? false,
+              dogs: data.good_with_dogs ?? false,
+              cats: data.good_with_cats ?? false,
+            },
+            location: data.location,
+          });
+        })
+        .catch(() => setError('Could not load animal details.'))
+        .finally(() => setLoading(false));
+    }
+  }, [id, animal]);
+
+  if (loading) return <div className="text-center py-8 text-lg text-gray-500">Loading animal details...</div>;
+  if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
+  if (!animal) return null;
+
   const daysInSFP = calculateDaysInSFP(animal.intakeDate);
 
   const handleApply = () => {
@@ -62,7 +115,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ animal }) => {
         {/* Thumbnail navigation */}
         {animal.imageUrls.length > 1 && (
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm p-2 rounded-full shadow-md">
-            {animal.imageUrls.map((_, index) => (
+            {animal.imageUrls.map((_: string, index: number) => (
               <button
                 key={index}
                 onClick={() => setActiveImageIndex(index)}
@@ -144,7 +197,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ animal }) => {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Personality</h2>
           <div className="flex flex-wrap gap-3">
-            {animal.personality.map((trait, index) => (
+            {animal.personality.map((trait: string, index: number) => (
               <span 
                 key={index} 
                 className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white rounded-full font-medium"
@@ -251,7 +304,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ animal }) => {
         </div>
         
         {/* Actions */}
-        {animal.status === 'Published' && (
+        {animal.status === 'published' && (
           <div className="flex flex-col sm:flex-row gap-4">
               <button 
                 onClick={handleApply}
@@ -270,7 +323,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ animal }) => {
           </div>
         )}
         
-        {animal.status === 'Adopted' && (
+        {animal.status === 'adopted' && (
           <div className="flex justify-center">
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-500 rounded-lg p-4 text-center w-full max-w-md">
               <i className="fa-solid fa-heart text-green-500 text-3xl mb-2"></i>
@@ -282,7 +335,7 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ animal }) => {
           </div>
         )}
         
-        {animal.status === 'Reserved' && (
+        {animal.status === 'reserved' && (
           <div className="flex justify-center">
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-500 rounded-lg p-4 text-center w-full max-w-md">
               <i className="fa-solid fa-hourglass-half text-yellow-500 text-3xl mb-2"></i>

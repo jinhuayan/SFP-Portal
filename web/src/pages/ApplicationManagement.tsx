@@ -47,9 +47,9 @@ export default function ApplicationManagement() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   
-  const isAdmin = currentUser?.role.includes('Admin');
-  const isInterviewer = currentUser?.role.includes('Interviewer');
-  
+  const isAdmin = currentUser?.role.includes('admin');
+  const isInterviewer = currentUser?.role.includes('interviewer');
+
   if (!currentUser || (!isAdmin && !isInterviewer)) {
     return (
       <div className="min-h-screen py-12 bg-[#FFDF4] dark:bg-gray-800/50">

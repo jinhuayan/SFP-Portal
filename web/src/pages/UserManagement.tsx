@@ -9,7 +9,7 @@ const mockUsers = [
     id: '1',
     name: 'Admin User',
     email: 'admin@example.com',
-    role: ['Admin'],
+    role: ['admin'],
     status: 'Active',
     createdAt: '2025-01-15',
   },
@@ -17,7 +17,7 @@ const mockUsers = [
     id: '2',
     name: 'Interviewer User',
     email: 'interviewer@example.com',
-    role: ['Interviewer'],
+    role: ['interviewer'],
     status: 'Active',
     createdAt: '2025-02-20',
   },
@@ -33,7 +33,7 @@ const mockUsers = [
     id: '4',
     name: 'Foster User',
     email: 'foster@example.com',
-    role: ['Foster'],
+    role: ['foster'],
     status: 'Active',
     createdAt: '2025-04-05',
   },
@@ -41,7 +41,7 @@ const mockUsers = [
     id: '5',
     name: 'Adopter User',
     email: 'adopter@example.com',
-    role: ['Adopter'],
+    role: ['adopter'],
     status: 'Active',
     createdAt: '2025-11-15',
   },
@@ -52,7 +52,7 @@ export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   
-  if (!currentUser || !currentUser.role.includes('Admin')) {
+  if (!currentUser || !currentUser.role.includes('admin')) {
     return (
       <div className="min-h-screen py-12 bg-[#FFDF4] dark:bg-gray-800/50">
         <div className="container mx-auto px-4">
@@ -158,7 +158,7 @@ export default function UserManagement() {
                 <option value="Interviewer">Interviewers</option>
                 <option value="Super Foster">Super Fosters</option>
                 <option value="Foster">Fosters</option>
-                <option value="Adopter">Adopters</option>
+                <option value="adopter">Adopters</option>
               </select>
             </div>
           </div>
@@ -268,15 +268,15 @@ export default function UserManagement() {
                               <i className="fa-solid fa-ellipsis-vertical"></i>
                             </button>
                             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg py-1 z-50 hidden group-hover:block">
-                              {['Admin', 'Interviewer', 'Super Foster', 'Foster', 'Adopter'].map((role) => {
+                              {['admin', 'interviewer', 'super foster', 'foster', 'adopter'].map((role) => {
                                 const hasRole = user.role.includes(role);
                                 return (
                                   <button
                                     key={role}
-                                    disabled={hasRole && role === 'Admin' && user.id === currentUser.id}
+                                    disabled={hasRole && role === 'admin' && user.id === currentUser.id}
                                     onClick={() => handleRoleChange(user.id, role, !hasRole)}
                                     className={`w-full text-left px-4 py-2 text-sm ${
-                                      hasRole && role === 'Admin' && user.id === currentUser.id
+                                      hasRole && role === 'admin' && user.id === currentUser.id
                                         ? 'text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 cursor-not-allowed'
                                         : hasRole
                                           ? 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'

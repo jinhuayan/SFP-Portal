@@ -1,10 +1,35 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Animal, calculateDaysInSFP } from '@/data/mockAnimals';
+import { calculateDaysInSFP } from '@/data/mockAnimals';
 import { cn } from '@/lib/utils';
 
 interface AnimalCardProps {
-  animal: Animal;
+  animal: {
+    id: string;
+    uniqueId: string;
+    name: string;
+    species: string;
+    breed: string;
+    age: string;
+    sex: string;
+    size: string;
+    color: string;
+    description: string;
+    personality: string[];
+    imageUrls: string[];
+    adoptionFee: number;
+    intakeDate: string;
+    postedDate: string;
+    status: string;
+    adoptionDate?: string;
+    adoptionStory?: string;
+    goodWith: {
+      children: boolean;
+      dogs: boolean;
+      cats: boolean;
+    };
+    location: string;
+  };
   className?: string;
   showUniqueId?: boolean;
   showDaysInSFP?: boolean;

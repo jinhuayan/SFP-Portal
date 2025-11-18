@@ -34,7 +34,7 @@ export const getAnimalById = async (req, res, next) => {
 export const getAvailableAnimals = async (req, res, next) => {
   try {
     const availableAnimals = await Animal.findAll({
-      where: { status: "Published" },
+      where: { status: "published" },
       include: [{ model: Volunteer }],
     });
 

@@ -67,7 +67,7 @@ export default function AddAnimal() {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   
   // Check if user has permission to access this page
-  if (!currentUser || (!currentUser.role.includes('Admin') && !currentUser.role.includes('Foster') && !currentUser.role.includes('Super Foster'))) {
+  if (!currentUser || (!currentUser.role.includes('admin') && !currentUser.role.includes('foster') && !currentUser.role.includes('super foster'))) {
     navigate('/dashboard');
     toast.error('You do not have permission to access this page.');
     return null;
@@ -187,7 +187,7 @@ export default function AddAnimal() {
       
       toast.success(`${formData.name} has been added successfully!`, {
         description: "The animal has been saved as a draft.",
-        duration: 5000,
+        duration: 5001,
         onAutoClose: () => navigate('/animals/manage')
       });
     } catch (error) {
@@ -759,7 +759,7 @@ export default function AddAnimal() {
                   </>
                 )}
               </button>
-              {currentUser.role.includes('Admin') || currentUser.role.includes('Super Foster') ? (
+              {currentUser.role.includes('admin') || currentUser.role.includes('super foster') ? (
                 <button
                   type="button"
                   disabled={isSubmitting}

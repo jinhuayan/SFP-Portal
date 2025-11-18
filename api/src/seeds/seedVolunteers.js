@@ -1,56 +1,47 @@
-import bcrypt from "bcrypt";
-import { sequelize } from "../config/database.js";
+import sequelize from "../config/database.js";
 import Volunteer from "../models/Volunteer.js";
+import bcrypt from "bcrypt";
 
-const seedVolunteers = async () => {
+async function seedVolunteers() {
   try {
     await sequelize.authenticate();
-    console.log("✓ Database connected");
+
+    const hashed = await bcrypt.hash("password123", 10);
 
     const volunteers = [
       {
-        email: "foster@example.com",
-        password: await bcrypt.hash("password123", 10),
+        first_name: "Admin",
+        last_name: "User",
+        email: "admin@example.com",
+        password: hashed,
+        role: "admin",
+      },
+      {
         first_name: "Foster",
         last_name: "User",
+        email: "foster@example.com",
+        password: hashed,
         role: "foster",
       },
       {
-        email: "interviewer@example.com",
-        password: await bcrypt.hash("password123", 10),
         first_name: "Interviewer",
         last_name: "User",
+        email: "interviewer@example.com",
+        password: hashed,
         role: "interviewer",
-      },
-      {
-        email: "admin@example.com",
-        password: await bcrypt.hash("password123", 10),
-        first_name: "Admin",
-        last_name: "User",
-        role: "admin",
       },
     ];
 
-    for (const volunteerData of volunteers) {
-      const existing = await Volunteer.findOne({
-        where: { email: volunteerData.email },
-      });
-
-      if (existing) {
-        await existing.update(volunteerData);
-        console.log(`✓ Updated volunteer: ${volunteerData.email}`);
-      } else {
-        await Volunteer.create(volunteerData);
-        console.log(`✓ Created volunteer: ${volunteerData.email}`);
-      }
+    for (const v of volunteers) {
+      await Volunteer.create(v);
     }
 
-    console.log("\n✓ All volunteers seeded successfully");
+    console.log("✓ Volunteers seeded");
     process.exit(0);
-  } catch (error) {
-    console.error("✗ Error seeding volunteers:", error);
+  } catch (err) {
+    console.error(err);
     process.exit(1);
   }
-};
+}
 
 seedVolunteers();

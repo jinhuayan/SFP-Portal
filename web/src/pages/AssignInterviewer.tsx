@@ -49,7 +49,7 @@ export default function AssignInterviewer() {
   const [searchInterviewer, setSearchInterviewer] = useState('');
 
   // Check if user is admin
-  if (!currentUser || !currentUser.role.includes('Admin')) {
+  if (!currentUser || !currentUser.role.includes('admin')) {
     return (
       <div className="min-h-screen py-12 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4">
@@ -212,9 +212,9 @@ export default function AssignInterviewer() {
                     </div>
                     <div className="flex-shrink-0">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        animal.status === 'Published' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                        animal.status === 'Draft' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' :
-                        animal.status === 'Adopted' ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400' :
+                        animal.status === 'published' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                        animal.status === 'draft' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' :
+                        animal.status === 'adopted' ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400' :
                         'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                       }`}>
                         {animal.status}
