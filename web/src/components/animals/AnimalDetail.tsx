@@ -472,6 +472,20 @@ const AnimalDetail: React.FC<AnimalDetailProps> = ({ animal: propAnimal }) => {
           </div>
         )}
 
+        {animal.status === "reserved" && (
+          <div className="flex justify-center">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-500 rounded-lg p-4 text-center w-full max-w-md">
+              <i className="fa-solid fa-clock text-yellow-500 text-3xl mb-2"></i>
+              <h3 className="text-xl font-bold text-yellow-800 dark:text-yellow-300 mb-2">
+                Reserved - Application Under Review
+              </h3>
+              <p className="text-yellow-700 dark:text-yellow-400">
+                This animal is currently reserved while an application is being reviewed. Check back soon!
+              </p>
+            </div>
+          </div>
+        )}
+
         {animal.status === "adopted" && (
           <div className="flex justify-center">
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-500 rounded-lg p-4 text-center w-full max-w-md">

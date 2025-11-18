@@ -67,9 +67,16 @@ const AnimalCard: React.FC<AnimalCardProps> = ({
         </div>
 
         {/* Adoption fee badge */}
-        {!isAdopted && (
+        {!isAdopted && animal.status !== "reserved" && (
           <div className="absolute top-3 right-3 bg-white dark:bg-gray-800 text-[#4C51A4] text-xs font-semibold px-2.5 py-1 rounded-full shadow">
             ${animal.adoptionFee}
+          </div>
+        )}
+
+        {/* Reserved badge */}
+        {animal.status === "reserved" && (
+          <div className="absolute top-3 right-3 bg-yellow-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow">
+            Reserved
           </div>
         )}
 

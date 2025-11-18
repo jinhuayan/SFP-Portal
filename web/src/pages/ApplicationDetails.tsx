@@ -191,9 +191,84 @@ export default function ApplicationDetails() {
     );
   }
 
-  const handleStatusChange = useCallback((newStatus: string) => {
-    setStatus(newStatus);
-  }, []);
+  const handleStatusChange = useCallback(async (newStatus: string) => {
+    if (!application) return;
+
+    try {
+      // Handle Review status - mark animal as reserved
+      if (newStatus === "review") {
+        await apiPatch(`/api/animals/${application.animalId}/state`, {
+          status: "reserved",
+        });
+        await apiPatch(`/api/applications/${application.id}/status`, {
+          status: "review",
+        });
+        setStatus(newStatus);
+        toast.success(
+          `Application moved to review. ${application.animalName} is now reserved.`
+        );
+        await fetchApplication();
+        return;
+      }
+
+      // Handle Approved status - mark animal as adopted and reject other applications
+      if (newStatus === "approved") {
+        // Update animal status to "adopted"
+        await apiPatch(`/api/animals/${application.animalId}/state`, {
+          status: "adopted",
+        });
+
+        // Update application status to "approved"
+        await apiPatch(`/api/applications/${application.id}/status`, {
+          status: "approved",
+        });
+
+        // Fetch all applications for this animal and reject the others
+        try {
+          const allApplications: BackendApplication[] = await apiGet("/api/applications");
+          const otherApplications = allApplications.filter(
+            (app) => app.animal_id === application.animalId && app.id !== application.id
+          );
+
+          // Reject all other applications for this animal
+          for (const otherApp of otherApplications) {
+            if (otherApp.status !== "rejected" && otherApp.status !== "approved") {
+              await apiPatch(`/api/applications/${otherApp.id}/status`, {
+                status: "rejected",
+              });
+            }
+          }
+
+          toast.success(
+            `Application approved! ${application.animalName} has been marked as adopted. ${otherApplications.length} other application(s) rejected.`
+          );
+        } catch (err) {
+          console.error("Failed to reject other applications:", err);
+          toast.success(
+            `Application approved! ${application.animalName} has been marked as adopted.`
+          );
+        }
+
+        setStatus(newStatus);
+        await fetchApplication();
+        return;
+      }
+
+      // For all other status changes (submitted, interview, rejected)
+      await apiPatch(`/api/applications/${application.id}/status`, {
+        status: newStatus,
+      });
+      setStatus(newStatus);
+      toast.success("Application status updated");
+      await fetchApplication();
+
+    } catch (error: any) {
+      console.error("Error updating status:", error);
+      toast.error(
+        error.message || "Failed to update status. Please try again."
+      );
+    }
+  }, [application, fetchApplication]);
 
   const handleScheduleInterview = async () => {
     if (!application) {
@@ -392,10 +467,10 @@ export default function ApplicationDetails() {
                         className={`font-medium ${
                           status === "submitted"
                             ? "text-blue-600 dark:text-blue-400"
-                            : status === "reviewing"
-                            ? "text-yellow-600 dark:text-yellow-400"
                             : status === "interview"
                             ? "text-purple-600 dark:text-purple-400"
+                            : status === "review"
+                            ? "text-yellow-600 dark:text-yellow-400"
                             : status === "approved"
                             ? "text-green-600 dark:text-green-400"
                             : status === "rejected"
@@ -415,9 +490,9 @@ export default function ApplicationDetails() {
                         className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                       >
                         <option value="submitted">Submitted</option>
-                        <option value="reviewing">Reviewing</option>
                         <option value="interview">Interview</option>
-                        <option value="approved">Approved</option>
+                        <option value="review">Review</option>
+                        {isAdmin && <option value="approved">Approved</option>}
                         <option value="rejected">Rejected</option>
                       </select>
                     )}

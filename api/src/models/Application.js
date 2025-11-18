@@ -22,6 +22,9 @@ const Application = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: "submitted",
+      validate: {
+        isIn: [["submitted", "interview", "review", "approved", "rejected"]],
+      },
     },
     // Personal Information
     full_name: {

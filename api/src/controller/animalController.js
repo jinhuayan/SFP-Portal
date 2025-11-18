@@ -405,10 +405,13 @@ export const updateAnimalState = async (req, res, next) => {
 
     // Role-based permission enforcement
     if (userRole === "interviewer") {
-      // Interviewers can only set status to "interviewing"
-      if (status !== "interviewing") {
+      // Interviewers can set status to "interviewing" or "reserved"
+      // "interviewing" - when scheduling interview
+      // "reserved" - when moving application to review status
+      const allowedStatuses = ["interviewing", "reserved"];
+      if (!allowedStatuses.includes(status)) {
         return res.status(403).json({
-          message: "Interviewers can only set status to 'interviewing'",
+          message: "Interviewers can only set status to 'interviewing' or 'reserved'",
         });
       }
     } else if (userRole === "admin") {

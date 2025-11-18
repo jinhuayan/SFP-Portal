@@ -17,6 +17,7 @@ interface BackendApplication {
     name: string;
     species: string;
     image_urls: string[];
+    status: string; // Animal status: draft, fostering, ready, published, interviewing, reserved, adopted, archived
   };
 }
 
@@ -34,32 +35,33 @@ interface UiApplication {
   id: number;
   animalId: string;
   animalName?: string;
+  animalStatus?: string; // Animal status
   applicantName: string;
   email: string;
   phone: string;
-  status: string; // backend raw value
+  status: string; // Application status
   dateSubmitted: string;
   interviewTime?: string;
   interviewerName?: string;
 }
 
+// Filter by animal status instead of application status
 const statusOptions = [
-  { id: "all", label: "All" },
-  { id: "submitted", label: "Submitted" },
-  { id: "reviewing", label: "Reviewing" },
-  { id: "interview", label: "Interview" },
-  { id: "approved", label: "Approved" },
-  { id: "rejected", label: "Rejected" },
+  { id: "all", label: "All Animals" },
+  { id: "published", label: "Available" },
+  { id: "interviewing", label: "Interviewing" },
+  { id: "reserved", label: "Reserved" },
+  { id: "adopted", label: "Adopted" },
 ];
 
 const mapStatusToDisplay = (status: string) => {
   switch (status) {
     case "submitted":
       return "Submitted";
-    case "reviewing":
-      return "Reviewing";
     case "interview":
       return "Interview";
+    case "review":
+      return "Review";
     case "approved":
       return "Approved";
     case "rejected":
@@ -73,10 +75,10 @@ const statusClass = (status: string) => {
   switch (status) {
     case "submitted":
       return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-    case "reviewing":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
     case "interview":
       return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
+    case "review":
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
     case "approved":
       return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
     case "rejected":
@@ -129,6 +131,7 @@ export default function ApplicationManagement() {
     id: data.id,
     animalId: data.Animal?.unique_id || data.animal_id,
     animalName: data.Animal?.name,
+    animalStatus: data.Animal?.status,
     applicantName: data.full_name,
     email: data.email,
     phone: data.phone,
@@ -185,11 +188,11 @@ export default function ApplicationManagement() {
 
   // Status changes are now restricted to ApplicationDetails page only.
 
-  // Derived filtering
+  // Derived filtering - filter by animal status instead of application status
   let filteredApplications = applications;
   if (activeTab !== "all") {
     filteredApplications = filteredApplications.filter(
-      (app) => app.status === activeTab
+      (app) => app.animalStatus === activeTab
     );
   }
   if (searchTerm) {
@@ -248,7 +251,7 @@ export default function ApplicationManagement() {
                       {applications.filter(
                         (app) =>
                           app.status === "submitted" ||
-                          app.status === "reviewing"
+                          app.status === "review"
                       ).length}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">

@@ -228,7 +228,9 @@ export default function ScheduleInterview() {
       }
 
       toast.success(
-        `Interview scheduled successfully for ${application.full_name} and ${application.Animal?.name}!`
+        existingInterview
+          ? `Interview rescheduled successfully for ${application.full_name} and ${application.Animal?.name}!`
+          : `Interview scheduled successfully for ${application.full_name} and ${application.Animal?.name}!`
       );
 
       // Redirect back to application management
@@ -580,12 +582,12 @@ export default function ScheduleInterview() {
                   {isSubmitting ? (
                     <>
                       <i className="fa-solid fa-spinner fa-spin mr-2"></i>
-                      Scheduling...
+                      {existingInterview ? "Rescheduling..." : "Scheduling..."}
                     </>
                   ) : (
                     <>
-                      <i className="fa-solid fa-calendar-plus mr-2"></i>
-                      Schedule Interview
+                      <i className={`fa-solid ${existingInterview ? "fa-calendar-day" : "fa-calendar-plus"} mr-2`}></i>
+                      {existingInterview ? "Update Interview" : "Schedule Interview"}
                     </>
                   )}
                 </button>

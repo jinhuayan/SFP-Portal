@@ -10,7 +10,7 @@ export const getAllApplications = async (req, res, next) => {
       include: [
         {
           model: Animal,
-          attributes: ["unique_id", "name", "species", "image_urls"],
+          attributes: ["unique_id", "name", "species", "image_urls", "status"],
         },
       ],
     });
@@ -30,7 +30,7 @@ export const getApplicationById = async (req, res, next) => {
       include: [
         {
           model: Animal,
-          attributes: ["unique_id", "name", "species", "image_urls"],
+          attributes: ["unique_id", "name", "species", "image_urls", "status"],
         },
       ],
     });
@@ -54,7 +54,7 @@ export const getApplicationsByAnimal = async (req, res, next) => {
       include: [
         {
           model: Animal,
-          attributes: ["unique_id", "name", "species", "image_urls"],
+          attributes: ["unique_id", "name", "species", "image_urls", "status"],
         },
       ],
     });
@@ -95,7 +95,7 @@ export const createApplication = async (req, res, next) => {
         include: [
           {
             model: Animal,
-            attributes: ["unique_id", "name", "species", "image_urls"],
+            attributes: ["unique_id", "name", "species", "image_urls", "status"],
           },
         ],
       }
@@ -159,6 +159,18 @@ export const updateApplicationStatus = async (req, res, next) => {
     const applicationId = parseInt(id);
     const { status } = req.body;
 
+    // Role-based authorization: Only admins can approve applications
+    if (status === "approved") {
+      const userRole = req.user?.role || "";
+      const roles = Array.isArray(userRole) ? userRole : [userRole];
+      
+      if (!roles.includes("admin")) {
+        return res.status(403).json({ 
+          message: "Only administrators can approve applications" 
+        });
+      }
+    }
+
     // Find application in database
     const application = await Application.findByPk(applicationId);
 
@@ -174,7 +186,7 @@ export const updateApplicationStatus = async (req, res, next) => {
       include: [
         {
           model: Animal,
-          attributes: ["unique_id", "name", "species", "image_urls"],
+          attributes: ["unique_id", "name", "species", "image_urls", "status"],
         },
       ],
     });
