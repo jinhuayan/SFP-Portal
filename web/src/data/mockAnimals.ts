@@ -23,7 +23,7 @@ export interface Animal {
   adoptionFee: number;
   intakeDate: string;
   postedDate: string;
-  status: 'Draft' | 'Fostering' | 'Ready for Adoption' | 'Published' | 'Interviewing' | 'Reserved' | 'Adopted' | 'Archived';
+  status: 'draft' | 'fostering' | 'ready for adoption' | 'published' | 'interviewing' | 'reserved' | 'adopted' | 'archived ';
   // Internal only fields
   microchipNumber: string;
   medicalHistory: string;
@@ -65,7 +65,7 @@ export const mockAnimals: Animal[] = [
     adoptionFee: 250,
     intakeDate: '2025-10-15',
     postedDate: '2025-11-01',
-    status: 'Published',
+    status: 'published',
     microchipNumber: '981020012345678',
     medicalHistory: 'Up to date on all vaccinations, regular check-ups.',
     behaviorNotes: 'Well-trained, responds to basic commands.',
@@ -99,7 +99,7 @@ export const mockAnimals: Animal[] = [
     adoptionFee: 150,
     intakeDate: '2025-10-20',
     postedDate: '2025-11-05',
-    status: 'Published',
+    status: 'published',
     microchipNumber: '981020012345679',
     medicalHistory: 'All vaccinations up to date, spayed.',
     behaviorNotes: 'Vocal, likes to communicate with humans.',
@@ -133,7 +133,7 @@ export const mockAnimals: Animal[] = [
     adoptionFee: 200,
     intakeDate: '2025-10-25',
     postedDate: '2025-11-10',
-    status: 'Published',
+    status: 'published',
     microchipNumber: '981020012345680',
     medicalHistory: 'Vaccinations up to date, neutered.',
     behaviorNotes: 'Gentle with people, needs socialization with other animals.',

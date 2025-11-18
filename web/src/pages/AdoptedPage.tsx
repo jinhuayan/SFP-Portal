@@ -1,22 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import AnimalList from '@/components/animals/AnimalList';
-import { mockAnimals } from '@/data/mockAnimals';
 
 export default function AdoptedPage() {
-  const [filters, setFilters] = useState({
-    species: '',
-    age: '',
-    size: '',
-    goodWith: ''
-  });
-  
   const [activeTab, setActiveTab] = useState('all');
-  
-  const handleFilterChange = (newFilters: typeof filters) => {
-    setFilters(newFilters);
-  };
-  
+
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
   };
@@ -69,8 +57,6 @@ export default function AdoptedPage() {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <AnimalList 
-            animals={mockAnimals} 
-            onFilterChange={handleFilterChange}
             showAdopted={true}
           />
         </motion.div>

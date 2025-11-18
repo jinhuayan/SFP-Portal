@@ -1,5 +1,5 @@
 import { useState, useContext, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/hooks/useTheme';
 import { AuthContext } from '@/contexts/authContext';
 
@@ -7,22 +7,21 @@ export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { currentUser, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   // Type guard for currentUser
   const isUserObject = (user: any): user is { role: string[]; name: string; isAuthenticated: boolean } => {
     return user && typeof user === 'object' && Array.isArray(user.role) && typeof user.name === 'string';
   };
 
-  const isAdmin = isUserObject(currentUser) && currentUser.role.includes('Admin');
-  const isFoster = isUserObject(currentUser) && currentUser.role.includes('Foster') && !currentUser.role.includes('Super Foster');
-  const isSuperFoster = isUserObject(currentUser) && currentUser.role.includes('Super Foster');
-  const isInterviewer = isUserObject(currentUser) && currentUser.role.includes('Interviewer');
-  const isAdopter = isUserObject(currentUser) && currentUser.role.includes('Adopter') && !isAdmin && !isFoster && !isSuperFoster && !isInterviewer;
+  const isAdmin = isUserObject(currentUser) && currentUser.role.includes('admin');
+  const isFoster = isUserObject(currentUser) && currentUser.role.includes('foster');
+  const isInterviewer = isUserObject(currentUser) && currentUser.role.includes('interviewer');
   const isAuthenticated = isUserObject(currentUser) && currentUser.isAuthenticated;
   const userName = isUserObject(currentUser) ? currentUser.name : 'User';
 
-  // Determine if user is internal staff
-  const isInternalStaff = isAdmin || isFoster || isSuperFoster || isInterviewer;
+  // Determine if user is internal staff (admin, interviewer, or foster)
+  const isInternalStaff = isAdmin || isFoster || isInterviewer;
 
   // Profile dropdown state + ref to handle outside clicks / Escape
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -78,25 +77,15 @@ export default function Header() {
               
               {/* Role-specific Navigation */}
               {isInterviewer || isAdmin ? (
-                <>
-                  <Link 
-                    to="/applications/manage" 
-                    className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
-                  >
-                    Manage Applications
-                  </Link>
-                  {isAdmin && (
-                    <Link 
-                      to="/interviewers/assign" 
-                      className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
-                    >
-                      Assign Interviewers
-                    </Link>
-                  )}
-                </>
+                <Link 
+                  to="/applications/manage" 
+                  className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
+                >
+                  Manage Applications
+                </Link>
               ) : null}
               
-              {(isFoster || isSuperFoster || isAdmin) && (
+              {(isFoster || isAdmin) && (
                 <Link 
                   to="/animals/manage" 
                   className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
@@ -105,14 +94,14 @@ export default function Header() {
                 </Link>
               )}
               
-                {isAdmin && (
-                 <Link 
-                   to="/users/manage" 
-                   className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
-                 >
-                   Manage Users
-                 </Link>
-               )}
+              {isAdmin && (
+                <Link 
+                  to="/users/manage" 
+                  className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium transition-colors"
+                >
+                  Manage Users
+                </Link>
+              )}
               
               {/* User profile and logout */}
               <div ref={profileRef} className="relative">
@@ -141,7 +130,11 @@ export default function Header() {
                     Edit Profile
                   </Link>
                   <button 
-                    onClick={() => { logout(); setIsProfileOpen(false); }}
+                    onClick={async () => { 
+                      await logout(); 
+                      setIsProfileOpen(false); 
+                      navigate('/login');
+                    }}
                     className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     <i className="fa-solid fa-sign-out-alt mr-1"></i> Logout
@@ -218,7 +211,11 @@ export default function Header() {
                       Edit Profile
                     </Link>
                     <button 
-                      onClick={() => { logout(); setIsProfileOpen(false); }}
+                      onClick={async () => { 
+                        await logout(); 
+                        setIsProfileOpen(false); 
+                        navigate('/login');
+                      }}
                       className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       <i className="fa-solid fa-sign-out-alt mr-1"></i> Logout
@@ -300,55 +297,28 @@ export default function Header() {
                       >
                         <i className="fa-solid fa-file-alt mr-2"></i>Manage Applications
                       </Link>
-                      {isAdmin && (
-                        <Link 
-                          to="#" 
-                          className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <i className="fa-solid fa-users-slash mr-2"></i>Assign Interviewers
-                        </Link>
-                      )}
                     </>
                   ) : null}
                   
-                  {(isFoster || isSuperFoster || isAdmin) && (
-                  <Link 
-                    to="/animals/manage" 
-                    className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <i className="fa-solid fa-pets mr-2"></i>Manage Animals
-                  </Link>
+                  {(isFoster || isAdmin) && (
+                    <Link 
+                      to="/animals/manage" 
+                      className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <i className="fa-solid fa-pets mr-2"></i>Manage Animals
+                    </Link>
                   )}
                   
-                {isAdmin && (
-                 <Link 
-                   to="/users/manage" 
-                   className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
-                   onClick={() => setIsMenuOpen(false)}
-                 >
-                   <i className="fa-solid fa-users-cog mr-2"></i>Manage Users
-                 </Link>
-               )}
-               {isAdmin && (
-                 <Link 
-                   to="/interviewers/assign" 
-                   className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
-                   onClick={() => setIsMenuOpen(false)}
-                 >
-                   <i className="fa-solid fa-user-tie mr-2"></i>Assign Interviewers
-                 </Link>
-               )}
-              {isAdmin && (
-                <Link 
-                  to="/interviewers/assign" 
-                  className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <i className="fa-solid fa-user-tie mr-2"></i>Assign Interviewers
-                </Link>
-              )}
+                  {isAdmin && (
+                    <Link 
+                      to="/users/manage" 
+                      className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary-light font-medium py-2 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <i className="fa-solid fa-users-cog mr-2"></i>Manage Users
+                    </Link>
+                  )}
                   
                   <Link 
                     to="/profile" 
@@ -359,9 +329,10 @@ export default function Header() {
                   </Link>
                   
                   <button 
-                    onClick={() => {
-                      logout();
+                    onClick={async () => {
+                      await logout();
                       setIsMenuOpen(false);
+                      navigate('/login');
                     }}
                     className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center"
                   >
@@ -419,9 +390,10 @@ export default function Header() {
                       </Link>
                       
                       <button 
-                        onClick={() => {
-                          logout();
+                        onClick={async () => {
+                          await logout();
                           setIsMenuOpen(false);
+                          navigate('/login');
                         }}
                         className="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center"
                       >

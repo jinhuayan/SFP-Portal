@@ -4,45 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
 import { toast } from 'sonner';
 
-// Mock user roles for demonstration
-const mockUsers = [
-  {
-    id: '1',
-    email: 'adopter@example.com',
-    password: 'password123',
-    name: 'Adopter User',
-    role: ['Adopter']
-  },
-  {
-    id: '2',
-    email: 'foster@example.com',
-    password: 'password123',
-    name: 'Foster User',
-    role: ['Foster']
-  },
-  {
-    id: '3',
-    email: 'superfoster@example.com',
-    password: 'password123',
-    name: 'Super Foster User',
-    role: ['Foster', 'Super Foster']
-  },
-  {
-    id: '4',
-    email: 'interviewer@example.com',
-    password: 'password123',
-    name: 'Interviewer User',
-    role: ['Interviewer']
-  },
-  {
-    id: '5',
-    email: 'admin@example.com',
-    password: 'password123',
-    name: 'Admin User',
-    role: ['Admin']
-  }
-];
-
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,41 +11,53 @@ export default function LoginPage() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Please enter both email and password');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const user = mockUsers.find(u => u.email === email && u.password === password);
+  // using api call for login
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',  
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      console.log('✅ Login successful, received data:', data);
+      // Backend sets cookies, just update context state
+      login({
+        id: data.volunteer.id,
+        name: data.volunteer.name,
+        email: data.volunteer.email,
+        role: Array.isArray(data.volunteer.role) ? data.volunteer.role : [data.volunteer.role],
+      });
+      toast.success(`Welcome back, ${data.volunteer.name}!`);
       
-      if (user) {
-        login(user);
-        toast.success(`Welcome back, ${user.name}!`);
-        
-        // Redirect based on user role
-        if (user.role.includes('Admin')) {
-          navigate('/dashboard');
-        } else if (user.role.includes('Interviewer')) {
-          navigate('/applications/manage');
-        } else if (user.role.includes('Foster') || user.role.includes('Super Foster')) {
-          navigate('/animals/manage');
-        } else {
-          navigate('/dashboard');
-        }
+      // Get first role for routing
+      const userRole = Array.isArray(data.volunteer.role) ? data.volunteer.role[0] : data.volunteer.role;
+      
+      // Redirect based on role...
+      if (userRole === 'admin') {
+        navigate('/dashboard');
+      } else if (userRole === 'interviewer') {
+        navigate('/applications/manage');
+      } else if (userRole === 'foster') {
+        navigate('/animals/manage');
       } else {
-        toast.error('Invalid email or password');
+        navigate('/dashboard');
       }
-      
-      setIsSubmitting(false);
-    }, 1000);
-  };
+    } else {
+      toast.error(data.message || 'Invalid email or password');
+    }
+  } catch (err) {
+    toast.error('Login failed. Please try again.');
+  }
+  setIsSubmitting(false);
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#FFDF4] dark:bg-gray-900">
@@ -206,9 +179,7 @@ export default function LoginPage() {
             Mock Login Credentials:
           </h3>
           <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-2">
-           <li><strong>Adopter:</strong> adopter@example.com / password123</li>
            <li><strong>Volunteer (Foster):</strong> foster@example.com / password123</li>
-           <li><strong>Volunteer (Super Foster):</strong> superfoster@example.com / password123</li>
            <li><strong>Volunteer (Interviewer):</strong> interviewer@example.com / password123</li>
            <li><strong>Admin:</strong> admin@example.com / password123</li>
           </ul>

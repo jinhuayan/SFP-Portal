@@ -1,0 +1,163 @@
+import { DataTypes } from "sequelize";
+import { sequelize } from "../config/database.js";
+
+const Animal = sequelize.define(
+  "Animal",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    unique_id: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      validate: {
+        is: /^SFP-\d+$/,
+      },
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    species: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    breed: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    age: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    sex: {
+      type: DataTypes.ENUM("Male", "Female"),
+      allowNull: false,
+    },
+    size: {
+      type: DataTypes.ENUM("Small", "Medium", "Large"),
+      allowNull: false,
+      defaultValue: "Medium",
+    },
+    color: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    personality: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: false,
+      defaultValue: [],
+    },
+    image_urls: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: false,
+      defaultValue: [],
+    },
+    vaccinated: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    neutered: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    good_with_children: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    good_with_dogs: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    good_with_cats: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    location: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    adoption_fee: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+    },
+    intake_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    posted_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.ENUM(
+        "draft",
+        "fostering",
+        "ready",
+        "published",
+        "interviewing",
+        "reserved",
+        "adopted",
+        "archived"
+      ),
+      allowNull: false,
+      defaultValue: "draft",
+    },
+    // Volunteer who created/listed the animal
+    volunteer_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: "volunteers", key: "id" },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
+    },
+    // Assigned interviewer (one animal -> one interviewer; nullable by default)
+    interviewer_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: "volunteers", key: "id" },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
+    },
+    microchip_number: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    medical_history: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    behavior_notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    intake_source: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    internal_notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+  },
+  {
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    tableName: "animals",
+  }
+);
+
+export default Animal;
