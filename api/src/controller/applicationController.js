@@ -159,16 +159,38 @@ export const updateApplicationStatus = async (req, res, next) => {
     const applicationId = parseInt(id);
     const { status } = req.body;
 
-    // Role-based authorization: Only admins can approve applications
-    if (status === "approved") {
-      const userRole = req.user?.role || "";
-      const roles = Array.isArray(userRole) ? userRole : [userRole];
-      
-      if (!roles.includes("admin")) {
+    // Valid application statuses
+    const validStatuses = ["submitted", "interview", "review", "approved", "rejected"];
+    
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ 
+        message: `Invalid status. Must be one of: ${validStatuses.join(", ")}` 
+      });
+    }
+
+    // Get user role
+    const userRole = req.user?.role || "";
+    const roles = Array.isArray(userRole) ? userRole : [userRole];
+    const isAdmin = roles.includes("admin");
+    const isInterviewer = roles.includes("interviewer");
+
+    // Role-based authorization
+    if (isAdmin) {
+      // Admins can change to any status (including reverting approved back to other statuses)
+      // No restrictions
+    } else if (isInterviewer) {
+      // Interviewers can only change to "interview" or "review" statuses
+      const allowedStatuses = ["interview", "review"];
+      if (!allowedStatuses.includes(status)) {
         return res.status(403).json({ 
-          message: "Only administrators can approve applications" 
+          message: "Interviewers can only set status to 'interview' or 'review'" 
         });
       }
+    } else {
+      // Other roles cannot change application status
+      return res.status(403).json({ 
+        message: "You don't have permission to update application status" 
+      });
     }
 
     // Find application in database
@@ -178,8 +200,12 @@ export const updateApplicationStatus = async (req, res, next) => {
       return res.status(404).json({ message: "Application not found" });
     }
 
+    const oldStatus = application.status;
+
     // Update status
     await application.update({ status });
+
+    console.log(`✅ Application #${applicationId} status changed from "${oldStatus}" to "${status}" by ${isAdmin ? 'admin' : 'interviewer'}`);
 
     // Return with details
     const updatedApplication = await Application.findByPk(applicationId, {

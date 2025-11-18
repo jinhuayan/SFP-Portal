@@ -194,7 +194,43 @@ export default function ApplicationDetails() {
   const handleStatusChange = useCallback(async (newStatus: string) => {
     if (!application) return;
 
+    // Warn admin if changing from approved status
+    if (application.status === "approved" && newStatus !== "approved" && isAdmin) {
+      const confirmed = window.confirm(
+        `⚠️ WARNING: This application is currently APPROVED.\n\n` +
+        `Changing the status from "approved" to "${newStatus}" will:\n` +
+        `- Change the animal status from "adopted" back to "interviewing"\n` +
+        `- Allow other applications to be processed\n` +
+        `- The contract link sent to the adopter may still be active\n\n` +
+        `Are you sure you want to change the status?`
+      );
+      
+      if (!confirmed) {
+        return;
+      }
+    }
+
     try {
+      // Handle changing FROM approved status (reverting an approval)
+      if (application.status === "approved" && newStatus !== "approved") {
+        // Change animal status back to "interviewing"
+        await apiPatch(`/api/animals/${application.animalId}/state`, {
+          status: "interviewing",
+        });
+
+        // Update application status
+        await apiPatch(`/api/applications/${application.id}/status`, {
+          status: newStatus,
+        });
+
+        setStatus(newStatus);
+        toast.success(
+          `Application status changed to "${newStatus}". ${application.animalName} is now back to "interviewing" status.`
+        );
+        await fetchApplication();
+        return;
+      }
+
       // Handle Review status - mark animal as reserved
       if (newStatus === "review") {
         await apiPatch(`/api/animals/${application.animalId}/state`, {
@@ -484,14 +520,21 @@ export default function ApplicationDetails() {
                   </div>
                   <div className="mt-4 md:mt-0">
                     {canUpdateStatus && application && (
-                      <>
-                        {/* Show dropdown only if not finalized OR user is admin */}
-                        {(status !== "approved" && status !== "rejected") || isAdmin ? (
+                      <div className="space-y-2">
+                        {/* Admin privilege indicator */}
+                        {isAdmin && (status === "approved" || status === "rejected") && (
+                          <div className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                            <i className="fa-solid fa-shield-halved"></i>
+                            <span>Admin: Can modify finalized status</span>
+                          </div>
+                        )}
+                        
+                        {/* Admins can change any status, others can only change non-finalized statuses */}
+                        {isAdmin || (status !== "approved" && status !== "rejected") ? (
                           <select
                             value={status}
                             onChange={(e) => handleStatusChange(e.target.value)}
-                            disabled={status === "approved" || status === "rejected"}
-                            className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                           >
                             <option value="submitted">Submitted</option>
                             <option value="interview">Interview</option>
@@ -504,14 +547,32 @@ export default function ApplicationDetails() {
                           <div className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800">
                             <i className="fa-solid fa-lock text-gray-400 mr-2"></i>
                             <span className="text-gray-600 dark:text-gray-400 text-sm">
-                              Status Locked
+                              Status Finalized
                             </span>
                           </div>
                         )}
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
+                
+                {/* Status Change Impact Banner */}
+                {isAdmin && status === "approved" && (
+                  <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <i className="fa-solid fa-info-circle text-amber-600 dark:text-amber-400 text-lg mt-0.5"></i>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">
+                          Status Change Impact
+                        </h4>
+                        <p className="text-xs text-amber-700 dark:text-amber-400">
+                          If you change this application from "approved", the animal's status will automatically change from "adopted" to "interviewing" to allow for reprocessing.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex flex-wrap gap-3">
                   <button
                     onClick={() => toast.info("Email action not implemented")}
