@@ -23,16 +23,7 @@ const Application = sequelize.define(
       allowNull: false,
       defaultValue: "submitted",
       validate: {
-        isIn: [
-          [
-            "submitted",
-            "interview",
-            "interview_scheduled",
-            "under_review",
-            "approved",
-            "rejected",
-          ],
-        ],
+        isIn: [["submitted", "interview", "review", "approved", "rejected"]],
       },
     },
     // Personal Information
