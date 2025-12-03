@@ -78,18 +78,53 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: JWT_SECRET
+            - name: JWT_EXPIRES_IN
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_EXPIRES_IN
             - name: SENDGRID_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: app-secrets
                   key: SENDGRID_API_KEY
+            - name: SENDGRID_FROM_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: SENDGRID_FROM_EMAIL
+            - name: DO_SPACES_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: spaces-credentials
+                  key: DO_SPACES_KEY
+            - name: DO_SPACES_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: spaces-credentials
+                  key: DO_SPACES_SECRET
+            - name: DO_SPACES_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DO_SPACES_ENDPOINT
+            - name: DO_SPACES_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DO_SPACES_BUCKET
+            - name: FRONTEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: FRONTEND_URL
           resources:
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 50m
+              memory: 64Mi
             limits:
-              cpu: 300m
-              memory: 256Mi
+              cpu: 150m
+              memory: 128Mi
           livenessProbe:
             httpGet:
               path: /api/health

@@ -11,8 +11,18 @@ import {
   deleteAnimal,
   assignAnimalInterviewer,
 } from "../controller/animalController.js";
+import {
+  uploadAnimalPhoto,
+  deleteAnimalPhoto,
+  getAnimalPhotos,
+  setPrimaryPhoto,
+  listSpacesBuckets,
+} from "../controller/photoController.js";
 import { authMiddleware, roleMiddleware } from "../middleware/auth.js";
 import { body } from "express-validator";
+import multer from "multer";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router();
 
@@ -20,6 +30,14 @@ const router = express.Router();
 router.get("/available", getAvailableAnimals);
 router.get("/adopted", getAdoptedAnimals);
 router.get("/stats/total", getTotalAnimalsCount);
+// Diagnostics route (must be before pattern ":id")
+router.get(
+  "/photos/diagnostics/spaces",
+  authMiddleware,
+  roleMiddleware("admin"),
+  listSpacesBuckets
+);
+
 router.get("/:id", getAnimalById);
 
 // Protected routes - must come AFTER public routes
@@ -148,5 +166,30 @@ router.patch(
 );
 
 router.delete("/:id", authMiddleware, roleMiddleware("admin"), deleteAnimal);
+
+// Photo endpoints
+router.post(
+  "/:animalId/photos",
+  authMiddleware,
+  roleMiddleware("admin", "foster"),
+  upload.single("photo"),
+  uploadAnimalPhoto
+);
+
+router.get("/:animalId/photos", getAnimalPhotos);
+
+router.delete(
+  "/:animalId/photos/:photoIndex",
+  authMiddleware,
+  roleMiddleware("admin", "foster"),
+  deleteAnimalPhoto
+);
+
+router.patch(
+  "/:animalId/photos/:photoIndex/primary",
+  authMiddleware,
+  roleMiddleware("admin", "foster"),
+  setPrimaryPhoto
+);
 
 export default router;

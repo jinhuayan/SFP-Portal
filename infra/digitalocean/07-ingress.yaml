@@ -5,8 +5,8 @@ metadata:
   namespace: sfp-portal
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
     nginx.ingress.kubernetes.io/rate-limit: "100"
     nginx.ingress.kubernetes.io/limit-rps: "10"
@@ -14,15 +14,8 @@ metadata:
     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - yourdomain.com
-        - www.yourdomain.com
-        - api.yourdomain.com
-      secretName: sfp-portal-tls
   rules:
-    - host: yourdomain.com
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
@@ -31,20 +24,14 @@ spec:
                 name: web
                 port:
                   number: 3000
-    - host: www.yourdomain.com
-      http:
-        paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
               service:
-                name: web
+                name: api
                 port:
-                  number: 3000
-    - host: api.yourdomain.com
-      http:
-        paths:
-          - path: /
+                  number: 5000
+          - path: /metrics
             pathType: Prefix
             backend:
               service:

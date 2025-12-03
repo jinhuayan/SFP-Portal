@@ -35,7 +35,8 @@ services:
 
   api:
     build:
-      context: ./api
+      # build context is relative to this compose file; api directory lives at ../api
+      context: ../api
       dockerfile: Dockerfile
     container_name: sfp-api
     environment:
@@ -59,14 +60,13 @@ services:
         condition: service_healthy
     networks:
       - sfp-network
-    volumes:
-      - ./api/src:/app/src
+    #  - ./api/src:/app/src
     command: sh -c "node src/migrations/runMigrations.js && node src/server.js"
     restart: unless-stopped
 
   web:
     build:
-      context: ./web
+      context: ../web
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: http://localhost:5000

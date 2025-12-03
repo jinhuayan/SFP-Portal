@@ -184,7 +184,7 @@ export default function AddAnimal() {
 
     setIsSubmitting(true);
 
-    // Prepare data according to backend API expectations
+    // Prepare data without photos initially
     const animalData = {
       name: formData.name,
       species: formData.species,
@@ -212,20 +212,59 @@ export default function AddAnimal() {
       intake_date: new Date().toISOString().split("T")[0],
       posted_date: new Date().toISOString().split("T")[0],
       status: "published",
-      image_urls:
-        previewImages.length > 0
-          ? previewImages
-          : ["https://via.placeholder.com/400x300?text=No+Image"],
+      image_urls: [], // Start with empty - we'll add photos via separate endpoint
     };
 
     try {
       console.log("Submitting animal data:", animalData);
 
-      // Call the backend API
+      // Create the animal
       const response = await apiPost("/api/animals", animalData);
+      const animalId = response.unique_id;
+
+      console.log(`Animal created with ID: ${animalId}`);
+
+      // Upload photos to DigitalOcean Spaces
+      if (selectedImages && selectedImages.length > 0) {
+        console.log(`Uploading ${selectedImages.length} photos to Spaces...`);
+
+        for (let i = 0; i < selectedImages.length; i++) {
+          const file = selectedImages[i];
+          const formData = new FormData();
+          formData.append("photo", file);
+
+          try {
+            const uploadResponse = await fetch(
+              `${
+                import.meta.env.VITE_API_BASE_URL
+              }/api/animals/${animalId}/photos`,
+              {
+                method: "POST",
+                body: formData,
+                credentials: "include", // Include auth cookies
+              }
+            );
+
+            if (!uploadResponse.ok) {
+              const error = await uploadResponse.json();
+              throw new Error(error.message || "Failed to upload photo");
+            }
+
+            const photoData = await uploadResponse.json();
+            console.log(`Photo ${i + 1} uploaded: ${photoData.url}`);
+          } catch (photoError) {
+            console.error(`Error uploading photo ${i + 1}:`, photoError);
+            toast.warning(
+              `Failed to upload photo ${
+                i + 1
+              }. The animal was created, but some photos may be missing.`
+            );
+          }
+        }
+      }
 
       toast.success(`${formData.name} has been published successfully!`, {
-        description: `Animal ID: ${response.unique_id} - Now available for adoption`,
+        description: `Animal ID: ${animalId} - Now available for adoption`,
         duration: 5000,
       });
 
@@ -233,7 +272,6 @@ export default function AddAnimal() {
       setTimeout(() => navigate("/animals/manage"), 1000);
     } catch (error: any) {
       console.error("Error publishing animal:", error);
-      console.error("Animal data:", animalData);
 
       let errorMessage = "Failed to publish animal. Please try again later.";
 

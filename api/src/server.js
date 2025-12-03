@@ -13,8 +13,6 @@ import contractRoutes from "./routes/contractRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import errorHandler from "./middleware/errorHandler.js";
 import redis from "./config/redis.js";
-import register, { metricsMiddleware } from "./middleware/metrics.js";
-import client from "prom-client";
 
 // Import all models to ensure they are registered with Sequelize
 import "./models/index.js";
@@ -27,35 +25,15 @@ const app = express();
 
 // Middleware
 // CORS configuration for cookies
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true,  // Allow cookies to be sent
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true, // Allow cookies to be sent
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());  // Parse cookies
-
-// Metrics middleware: simple instrumentation for Prometheus
-app.use(metricsMiddleware);
-
-// Helpers
-const generatePassword = () => {
-  const adjectives = [
-    "Happy",
-    "Sunny",
-    "Clever",
-    "Bright",
-    "Lucky",
-    "Swift",
-    "Brave",
-    "Kind",
-  ];
-  const nouns = ["Cat", "Dog", "Bird", "Fish", "Bear", "Lion", "Fox", "Owl"];
-  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-  const noun = nouns[Math.floor(Math.random() * nouns.length)];
-  const num = Math.floor(Math.random() * 9000) + 1000;
-  return `${adj}${noun}${num}`;
-};
+app.use(cookieParser()); // Parse cookies
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -85,16 +63,6 @@ app.get("/api/health", async (req, res) => {
       database: "disconnected",
       databaseError: error.message,
     });
-  }
-});
-
-// Prometheus metrics endpoint
-app.get("/metrics", async (req, res) => {
-  try {
-    res.set("Content-Type", register.contentType);
-    res.end(await register.metrics());
-  } catch (err) {
-    res.status(500).end(err.message);
   }
 });
 

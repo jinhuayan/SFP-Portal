@@ -138,8 +138,33 @@ export default function AnimalManagement() {
     );
   };
 
-  const handleArchive = (_animalId: string) => {
-    toast.success(`Animal has been archived successfully!`);
+  const handleDelete = async (animalId: number, animalName?: string) => {
+    const confirmMsg = `Are you sure you want to delete ${
+      animalName ? `"${animalName}" ` : "this"
+    }animal? This action cannot be undone.`;
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/animals/${animalId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (res.status === 204 || res.ok) {
+        setAnimals((prev) => prev.filter((a) => a.id !== animalId));
+        toast.success("Animal deleted successfully");
+      } else {
+        let errMsg = "Failed to delete animal";
+        try {
+          const data = await res.json();
+          if (data && data.message) errMsg = data.message;
+        } catch (e) {}
+        toast.error(errMsg);
+      }
+    } catch (err) {
+      console.error("Error deleting animal:", err);
+      toast.error("Failed to delete animal");
+    }
   };
 
   const handleMarkAsReady = (_animalId: string) => {
@@ -447,14 +472,16 @@ export default function AnimalManagement() {
                               </button>
                             )}
 
-                          {/* Archive button for all animals not already archived (admin only) */}
+                          {/* Delete button for all animals not already archived (admin only) */}
                           {animal.status !== "archived" && isAdmin && (
                             <button
-                              onClick={() => handleArchive(animal.uniqueId)}
+                              onClick={() =>
+                                handleDelete(animal.id, animal.name)
+                              }
                               className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                              title="Archive animal"
+                              title="Delete animal"
                             >
-                              <i className="fa-solid fa-archive"></i>
+                              <i className="fa-solid fa-trash"></i>
                             </button>
                           )}
                         </div>
