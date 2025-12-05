@@ -24,20 +24,20 @@ export default function AnimalManagement() {
   const isAdmin = currentUser?.role.includes("admin");
   const isFoster = currentUser?.role.includes("foster");
 
-  // Fetch animals from API
+  // Fetch and normalize animals: convert snake_case backend format to camelCase frontend
   useEffect(() => {
     async function fetchAnimals() {
       try {
         setLoading(true);
         const res = await fetch(`${API_BASE_URL}/api/animals`, {
-          credentials: "include", // Include auth cookies
+          credentials: "include", // Include auth cookies in request
         });
 
         if (!res.ok) throw new Error("Failed to fetch animals");
 
         const data = await res.json();
 
-        // Normalize the data from backend
+        // Transform snake_case fields from backend to camelCase for frontend
         const normalizedAnimals = data.map((animal: any) => ({
           id: animal.id,
           uniqueId: animal.unique_id,

@@ -7,11 +7,11 @@ if (!process.env.DB_HOST) {
   dotenv.config();
 }
 
-// Flag to indicate if we're running in mock/development mode
+// Flag to indicate if we're running in mock/development mode (DB connection failed)
 let useMockDB = false;
 
-// Create PostgreSQL connection using Sequelize
-const useSSL = process.env.DB_SSL === "true";
+// Initialize PostgreSQL connection via Sequelize ORM
+const useSSL = process.env.DB_SSL === "true"; // Enable SSL for production databases
 
 const sequelize = new Sequelize(
   process.env.DB_NAME || "sfp_portal",
@@ -21,9 +21,10 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST || "127.0.0.1",
     port: process.env.DB_PORT || 5432,
     dialect: "postgres",
-    logging: false, // Disable logging to avoid deprecation warning
+    logging: false, // Disable SQL query logging to reduce console spam
     connectionTimeoutMillis: 5001,
     ssl: useSSL,
+    // SSL config for encrypted connections to managed databases (DigitalOcean, AWS RDS)
     dialectOptions: useSSL
       ? { ssl: { require: true, rejectUnauthorized: false } }
       : {},

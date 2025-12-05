@@ -18,8 +18,9 @@ export const authMiddleware = (req, res, next) => {
     }
 
     // Try to get token from cookie first, then fall back to Authorization header
+    // Cookies are preferred because they're automatically sent by browser
     let token = req.cookies?.auth_token;
-    
+
     if (!token) {
       // Fall back to Authorization header for backward compatibility
       token = req.header("Authorization")?.replace("Bearer ", "");
@@ -30,17 +31,17 @@ export const authMiddleware = (req, res, next) => {
     }
 
     try {
-      // Verify token
+      // Verify token and extract payload (sub=userId, role, email)
       const decoded = jwt.verify(
         token,
         process.env.JWT_SECRET || "your-secret-key"
       );
-      // normalized token payload: sub, role, email
+      // Attach decoded payload to request for downstream access
       req.user = decoded;
 
       next();
     } catch (error) {
-      // Handle specific JWT errors
+      // Provide specific error messages for different JWT failure reasons
       if (error instanceof jwt.TokenExpiredError) {
         return res.status(401).json({ message: "Token has expired" });
       } else if (error instanceof jwt.JsonWebTokenError) {
@@ -61,17 +62,18 @@ export const roleMiddleware = (...roles) => {
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    // req.user.role expected to be a string
+    // Normalize role to uppercase for case-insensitive comparison
     const userRole = String(req.user.role || "").toUpperCase();
 
-    // Admin-like role can access everything
+    // ADMIN role bypasses all role restrictions (superuser pattern)
     if (userRole === "ADMIN") {
       return next();
     }
 
-    // If no specific roles required, allow authenticated
+    // If no specific roles required, allow any authenticated user
     if (!roles || roles.length === 0) return next();
 
+    // Check if user's role matches any required role
     const normalizedRequired = roles.map((r) => String(r).toUpperCase());
     const allowed = normalizedRequired.includes(userRole);
     if (!allowed) {

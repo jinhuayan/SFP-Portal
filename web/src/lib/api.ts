@@ -1,34 +1,38 @@
-// API utility functions with automatic cookie handling
+// API utility functions with automatic cookie/JWT handling
+// Credentials: include ensures auth_token cookie is sent with every request
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /**
  * Default fetch options that include credentials for cookies
+ * credentials: 'include' makes browser send cookies with cross-site requests
  */
 const defaultOptions: RequestInit = {
-  credentials: "include", // Always include cookies
+  credentials: "include", // Always include cookies in requests
   headers: {
     "Content-Type": "application/json",
   },
 };
 
 /**
- * Wrapper around fetch that automatically includes credentials
+ * Wrapper around fetch that automatically includes credentials and merges headers
  */
 export async function apiFetch(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<Response> {
+  // Support both relative and absolute URLs
   const url = endpoint.startsWith("http")
     ? endpoint
     : `${API_BASE_URL}${endpoint}`;
 
+  // Merge options: defaults first, then override with caller options
   return fetch(url, {
     ...defaultOptions,
     ...options,
     headers: {
       ...defaultOptions.headers,
-      ...options.headers,
+      ...options.headers, // Caller headers override defaults
     },
   });
 }

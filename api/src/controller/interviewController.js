@@ -3,21 +3,25 @@ import Interview from "../models/Interview.js";
 import Application from "../models/Application.js";
 import Volunteer from "../models/Volunteer.js";
 import Animal from "../models/Animal.js";
-import { sendInterviewScheduledEmail, sendInterviewUpdatedEmail } from "../services/emailService.js";
+import {
+  sendInterviewScheduledEmail,
+  sendInterviewUpdatedEmail,
+} from "../services/emailService.js";
 
 // Get all interviews (admin only) or assigned interviews (interviewer)
+// Role-based visibility: admins see all, interviewers see only their own
 export const getAllInterviews = async (req, res, next) => {
   try {
     const userRole = String(req.user?.role || "").toLowerCase();
-    const userId = req.user?.sub; // JWT uses 'sub' for user ID
+    const userId = req.user?.sub; // JWT 'sub' claim contains user ID
 
     let whereClause = {};
 
-    // Interviewers can only see interviews assigned to them
+    // Apply role-based filtering: interviewers scoped to their assignments
     if (userRole === "interviewer") {
       whereClause = { volunteer_id: userId };
     }
-    // Admin can see all interviews (no where clause)
+    // Admin sees all (empty whereClause = no filtering)
 
     const interviews = await Interview.findAll({
       where: whereClause,
@@ -125,11 +129,11 @@ export const getInterviewsByApplication = async (req, res, next) => {
   }
 };
 
-// Create interview (admin & interviewer) - requires application_id
-// If interview already exists for this application, update it instead
+// Create or update interview: idempotent operation with upsert pattern
+// Single interview per application; updates if already exists
 export const createInterview = async (req, res, next) => {
   try {
-    // Validate request
+    // Validate request body against schema
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -137,17 +141,17 @@ export const createInterview = async (req, res, next) => {
 
     const { application_id, volunteer_id, interview_time } = req.body;
     const userRole = String(req.user?.role || "").toLowerCase();
-    const userId = req.user?.sub; // JWT uses 'sub' for user ID, not 'id'
+    const userId = req.user?.sub; // JWT 'sub' claim contains user ID
 
-    // Check if application exists
+    // Verify application exists before creating interview
     const application = await Application.findByPk(application_id);
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    // Check if interview already exists for this application
+    // Upsert: check if interview already exists for this application
     const existingInterview = await Interview.findOne({
-      where: { application_id }
+      where: { application_id },
     });
 
     // Determine the volunteer_id to use
@@ -240,9 +244,9 @@ export const createInterview = async (req, res, next) => {
         if (animal) {
           // Format interview time
           const interviewDate = new Date(interview_time);
-          const formattedTime = interviewDate.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
+          const formattedTime = interviewDate.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
             hour12: true,
           });
 
@@ -251,10 +255,10 @@ export const createInterview = async (req, res, next) => {
             applicant_name: application.full_name,
             animal_name: animal.name,
             animal_id: animal.unique_id,
-            interview_date: interviewDate.toISOString().split('T')[0],
+            interview_date: interviewDate.toISOString().split("T")[0],
             interview_time: formattedTime,
-            interview_location: req.body.interview_location || 'SFP Office',
-            interview_notes: req.body.interview_notes || '',
+            interview_location: req.body.interview_location || "SFP Office",
+            interview_notes: req.body.interview_notes || "",
             interviewer_name: volunteerName,
             interviewer_email: volunteer.email,
           };
@@ -267,7 +271,7 @@ export const createInterview = async (req, res, next) => {
           }
         }
       } catch (emailError) {
-        console.error('Failed to send interview email:', emailError);
+        console.error("Failed to send interview email:", emailError);
         // Don't fail the request if email fails
       }
     }
@@ -357,7 +361,7 @@ export const updateInterview = async (req, res, next) => {
     if (interview_time && updatedInterview.Application) {
       try {
         const application = updatedInterview.Application;
-        
+
         // Get animal details
         const animal = await Animal.findOne({
           where: { unique_id: application.animal_id },
@@ -369,9 +373,9 @@ export const updateInterview = async (req, res, next) => {
         if (animal && volunteer) {
           // Format interview time
           const interviewDate = new Date(interview_time);
-          const formattedTime = interviewDate.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
+          const formattedTime = interviewDate.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
             hour12: true,
           });
 
@@ -380,10 +384,10 @@ export const updateInterview = async (req, res, next) => {
             applicant_name: application.full_name,
             animal_name: animal.name,
             animal_id: animal.unique_id,
-            interview_date: interviewDate.toISOString().split('T')[0],
+            interview_date: interviewDate.toISOString().split("T")[0],
             interview_time: formattedTime,
-            interview_location: req.body.interview_location || 'SFP Office',
-            interview_notes: req.body.interview_notes || '',
+            interview_location: req.body.interview_location || "SFP Office",
+            interview_notes: req.body.interview_notes || "",
             interviewer_name: `${volunteer.first_name} ${volunteer.last_name}`,
             interviewer_email: volunteer.email,
           };
@@ -397,7 +401,7 @@ export const updateInterview = async (req, res, next) => {
           }
         }
       } catch (emailError) {
-        console.error('Failed to send interview email:', emailError);
+        console.error("Failed to send interview email:", emailError);
         // Don't fail the request if email fails
       }
     }
