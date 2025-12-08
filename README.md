@@ -6,12 +6,15 @@
 
 ---
 
+## Video Demo
+Video URL: https://youtu.be/kvB1B6O-kOc 
+
 ## 1. Team Information
 
 | Name       | Student Number | Email                         | Role                    |
 | ---------- | -------------- | ----------------------------- | ----------------------- |
 | Yiming Liu | 1011337402     | yimingpaul.liu@mail.utoronto.ca | Frontend & UI Owner     |
-| Jinhua Yan | 1012858686     | jinhua.yan@mail.utoronto.ca   | Backend & Auth Owner    |
+| Jinhua Yan | 1012858686     | sudojinhua.yan@mail.utoronto.ca   | Backend & Auth Owner    |
 | Jiayan Xu  | 1012882436     | rayjiayan.xu@mail.utoronto.ca | Platform & DevOps Owner |
 
 ---
