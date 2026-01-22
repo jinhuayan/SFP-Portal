@@ -14,12 +14,7 @@ Video URL: https://youtu.be/kvB1B6O-kOc
 Deployed on: http://129.212.134.118
 
 ## 1. Team Information
-
-| Name       | Student Number | Email                           | Role                    |
-| ---------- | -------------- | ------------------------------- | ----------------------- |
-| Yiming Liu | 1011337402     | yimingpaul.liu@mail.utoronto.ca | Frontend & UI Owner     |
-| Jinhua Yan | 1012858686     | jinhua.yan@mail.utoronto.ca     | Backend & Auth Owner    |
-| Jiayan Xu  | 1012882436     | rayjiayan.xu@mail.utoronto.ca   | Platform & DevOps Owner |
+Yiming Liu; Jinhua Yan; Jiayan Xu
 
 ---
 
